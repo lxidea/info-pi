@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=800, height=480, initial-scale=1.0">
+    <title>Info-Pi Dashboard</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <span id="date" class="date"></span>
+            <span id="day" class="day"></span>
+            <span id="time" class="time"></span>
+        </header>
+        <div class="world-clocks" id="world-clocks"></div>
+
+        <div class="grid">
+            <div class="grid-left">
+                <!-- Weather Card -->
+                <div class="card" id="weather-card">
+                    <div class="card-body" id="weather-body">
+                        <div class="weather-main">
+                            <span class="weather-temp" id="w-temp">--°C</span>
+                            <span class="weather-desc" id="w-desc">加载中...</span>
+                        </div>
+                        <div class="weather-details">
+                            <span>湿度 <span id="w-humidity">--</span>%</span>
+                            <span>风 <span id="w-wind">--</span>km/h <span id="w-wind-dir"></span></span>
+                            <span>体感 <span id="w-feels">--</span>°C</span>
+                            <span id="w-aqi"></span>
+                        </div>
+                        <div class="forecast" id="w-forecast"></div>
+                        <div class="hourly" id="w-hourly"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid-right">
+                <!-- Calendar Card -->
+                <div class="card" id="calendar-card">
+                    <div class="card-body" id="calendar-body"></div>
+                </div>
+                <!-- Astronomy Card -->
+                <div class="card" id="astro-card">
+                    <div class="card-body astro-body">
+                        <div class="astro-col" id="astro-left"></div>
+                        <div class="astro-col" id="astro-right"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="status-bar" id="status-bar"></div>
+    </div>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

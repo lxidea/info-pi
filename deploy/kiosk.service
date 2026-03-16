@@ -1,0 +1,16 @@
+[Unit]
+Description=Info-Pi Chromium Kiosk
+After=graphical.target info-pi.service
+Wants=info-pi.service
+
+[Service]
+Type=simple
+User=pi
+Environment=DISPLAY=:0
+ExecStartPre=/bin/sleep 5
+ExecStart=/home/pi/info-pi/deploy/kiosk.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=graphical.target
