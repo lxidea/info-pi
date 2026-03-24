@@ -1,5 +1,85 @@
 # Info-Pi
 
+[English](#english) | 中文
+
+树莓派信息看板 -- 在 800x480 屏幕上显示天气、日历、天文和系统状态。基于 Flask 和原生 HTML/CSS/JS，无需构建工具。
+
+![看板截图](screenshot.png)
+
+## 功能
+
+- **实时天气** -- 温度、湿度、风速、体感温度、空气质量 (PM2.5)
+- **三天预报** -- 天气图标与温度范围
+- **12 小时逐时预报** -- 温度柱状图与天气图标
+- **月历** -- 高亮今日，标注中国法定节假日（红色）和调休工作日（金色）
+- **农历日期** -- 自动转换并显示在公历日期旁
+- **天文数据** -- 日出/日落、月出/月落、月相、银河可见性
+- **天文事件** -- 流星雨与日月食倒计时
+- **世界时钟** -- 伯克利、纽约、巴黎及当地温度
+- **系统状态** -- CPU 温度、CPU/内存/磁盘使用率
+- **昼夜主题** -- 背景色根据日出日落自动渐变，含 30 分钟晨昏过渡
+
+天气数据来自 [Open-Meteo](https://open-meteo.com/)（免费，无需 API 密钥）。
+
+## 快速开始
+
+```bash
+# 克隆并安装
+git clone https://github.com/lxidea/info-pi.git
+cd info-pi
+python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+
+# 本地运行
+python3 app.py
+# 打开 http://localhost:5000
+```
+
+## 部署到树莓派
+
+```bash
+# 一键部署（安装 systemd 服务并启动）
+bash deploy/deploy.sh pi@<树莓派IP>
+```
+
+将安装两个 systemd 服务：
+- `info-pi.service` -- Flask 服务（端口 5000）
+- `kiosk.service` -- Chromium 全屏 kiosk 模式
+
+### 前置条件
+
+- 带显示屏的树莓派（针对 800x480 优化）
+- Raspberry Pi OS 桌面版（用于 Chromium kiosk 模式）
+- Python 3.7+
+- 网络连接（用于天气 API）
+
+## 配置
+
+编辑 `config.py` 自定义：
+
+```python
+# 你的位置（Open-Meteo 天气接口使用的经纬度）
+WEATHER_LAT = 30.59    # 默认：中国武汉
+WEATHER_LON = 114.30
+
+# 刷新间隔（秒）
+WEATHER_INTERVAL = 900  # 15 分钟
+```
+
+世界时钟城市可在 `collectors/datetime_info.py` 中修改。
+
+## 许可证
+
+MIT
+
+---
+
+<a id="english"></a>
+
+# Info-Pi
+
+English | [中文](#info-pi)
+
 A Raspberry Pi kiosk dashboard that displays weather, calendar, astronomy, and system stats on an 800x480 screen. Built with Flask and plain HTML/CSS/JS -- no build tools required.
 
 ![Dashboard Screenshot](screenshot.png)
@@ -9,7 +89,8 @@ A Raspberry Pi kiosk dashboard that displays weather, calendar, astronomy, and s
 - **Current weather** -- temperature, humidity, wind, feels-like, air quality (PM2.5)
 - **3-day forecast** with weather icons and temperature ranges
 - **12-hour hourly timeline** with temperature bars and weather icons
-- **Monthly calendar** with today highlight and Chinese day-of-week headers
+- **Monthly calendar** with today highlight, Chinese public holidays (red) and makeup workdays (gold)
+- **Lunar calendar** -- automatic solar-to-lunar date conversion displayed alongside Gregorian date
 - **Astronomy data** -- sunrise/sunset, moonrise/moonset, moon phase, Milky Way visibility
 - **Upcoming events** -- meteor showers and eclipses with countdown
 - **World clocks** -- Berkeley, New York, Paris with local temperatures
@@ -73,8 +154,9 @@ info-pi/
   config.py           # Location, intervals, Flask settings
   collectors/
     weather.py        # Open-Meteo API (current + hourly + forecast + astronomy)
-    datetime_info.py  # Date, time, world clocks
+    datetime_info.py  # Date, time, lunar calendar, world clocks
     astronomy_events.py  # Meteor showers & eclipses (2024-2030)
+    holidays.py       # Chinese public holidays & makeup workdays
     system_stats.py   # CPU/RAM/disk via psutil
     network.py        # IP/ARP/bandwidth (available, not wired in)
   templates/
