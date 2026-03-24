@@ -453,6 +453,24 @@ body {
     color: #8b949e;
 }
 
+.cal-day.holiday {
+    color: #f85149;
+}
+
+.cal-day.workday {
+    color: #d29922;
+}
+
+.cal-day.today.holiday {
+    background: #f85149;
+    color: #0d1117;
+}
+
+.cal-day.today.workday {
+    background: #d29922;
+    color: #0d1117;
+}
+
 /* System status bar */
 .status-bar {
     background: var(--bg-secondary);

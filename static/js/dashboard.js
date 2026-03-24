@@ -39,7 +39,7 @@ var _cityWeather = [];
 
 function updateDateTime(dt) {
     if (!dt) return;
-    document.getElementById("date").textContent = dt.date;
+    document.getElementById("date").textContent = dt.date + (dt.lunar_date ? " " + dt.lunar_date : "");
     document.getElementById("day").textContent = dt.day_of_week;
     document.getElementById("time").textContent = dt.time;
 
@@ -280,15 +280,17 @@ function updateAstronomy(weather, events) {
 // Calendar
 var _calLastMonth = -1;
 
-function updateCalendar() {
+function updateCalendar(calData) {
     var now = new Date();
     var year = now.getFullYear();
     var month = now.getMonth(); // 0-indexed
     var today = now.getDate();
 
+    var hols = (calData && calData.holidays) ? calData.holidays : {};
+    var works = (calData && calData.workdays) ? calData.workdays : [];
+
     // Skip rebuild if same month (but always update today highlight)
     if (_calLastMonth === month) {
-        // Just update today highlight
         var days = document.querySelectorAll("#calendar-body .cal-day");
         days.forEach(function (el) {
             if (el.dataset.day) {
@@ -346,7 +348,13 @@ function updateCalendar() {
         cell.textContent = d;
         if (d === today) cell.classList.add("today");
         var dayOfWeek = (startOffset + d - 1) % 7;
-        if (dayOfWeek >= 5) cell.classList.add("weekend");
+        if (hols[String(d)]) {
+            cell.classList.add("holiday");
+        } else if (works.indexOf(d) >= 0) {
+            cell.classList.add("workday");
+        } else if (dayOfWeek >= 5) {
+            cell.classList.add("weekend");
+        }
         grid.appendChild(cell);
     }
 
@@ -416,7 +424,7 @@ function fetchAll() {
             updateDateTime(data.datetime);
             updateWeather(data.weather);
             updateHourly(data.weather);
-            updateCalendar();
+            updateCalendar(data.calendar);
             updateAstronomy(data.weather, data.astronomy_events);
             updateSystem(data.system);
             if (data.weather && data.weather.astronomy) {

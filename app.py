@@ -6,7 +6,7 @@ import time
 from flask import Flask, jsonify, render_template
 
 import config
-from collectors import datetime_info, weather, astronomy_events, system_stats
+from collectors import datetime_info, weather, astronomy_events, system_stats, holidays
 
 app = Flask(__name__)
 
@@ -44,6 +44,7 @@ def api_all():
             "weather": _data["weather"],
             "astronomy_events": astronomy_events.get_upcoming_events(),
             "system": system_stats.collect(),
+            "calendar": holidays.get_month_markers(),
         }
     return jsonify(snapshot)
 
