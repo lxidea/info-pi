@@ -4,7 +4,7 @@
 
 树莓派信息看板 -- 在 800x480 屏幕上显示天气、日历、天文和系统状态。基于 Flask 和原生 HTML/CSS/JS，无需构建工具。
 
-![看板截图](screenshot.png)
+![看板截图](screenshot.png?v=2)
 
 ## 功能
 
@@ -66,7 +66,17 @@ WEATHER_LON = 114.30
 WEATHER_INTERVAL = 900  # 15 分钟
 ```
 
-世界时钟城市可在 `collectors/datetime_info.py` 中修改。
+世界时钟城市也在 `config.py` 中配置：
+
+```python
+# 世界时钟：(显示名称, UTC偏移小时数, 夏令时类型)
+# 夏令时类型: "us" = 美国规则, "eu" = 欧盟规则, None = 无夏令时
+WORLD_CLOCKS = [
+    ("伯克利", -8, "us"),      # Berkeley (US Pacific)
+    ("纽约", -5, "us"),        # New York (US Eastern)
+    ("巴黎", 1, "eu"),         # Paris (CET)
+]
+```
 
 ## 许可证
 
@@ -82,7 +92,7 @@ English | [中文](#info-pi)
 
 A Raspberry Pi kiosk dashboard that displays weather, calendar, astronomy, and system stats on an 800x480 screen. Built with Flask and plain HTML/CSS/JS -- no build tools required.
 
-![Dashboard Screenshot](screenshot.png)
+![Dashboard Screenshot](screenshot.png?v=2)
 
 ## Features
 
@@ -144,7 +154,17 @@ WEATHER_LON = 114.30
 WEATHER_INTERVAL = 900  # 15 minutes
 ```
 
-World clock cities can be changed in `collectors/datetime_info.py`.
+World clock cities are also configured in `config.py`:
+
+```python
+# World clocks: (display_name, utc_offset_hours, dst_type)
+# dst_type: "us" = US rules, "eu" = EU rules, None = no DST
+WORLD_CLOCKS = [
+    ("伯克利", -8, "us"),      # Berkeley (US Pacific)
+    ("纽约", -5, "us"),        # New York (US Eastern)
+    ("巴黎", 1, "eu"),         # Paris (CET)
+]
+```
 
 ## Architecture
 

@@ -2,6 +2,8 @@
 
 from datetime import datetime, timedelta
 
+import config
+
 # Lunar calendar data from zhdate (1900-2100)
 # 20-bit codes: top 1 bit = leap month big/small, middle 12 bits = month sizes, bottom 4 bits = leap month number
 _YEAR_CODES = [
@@ -148,12 +150,7 @@ WEEKDAYS = [
     "\u661f\u671f\u65e5",
 ]
 
-# World clock cities: (display_name, std_utc_offset_hours, dst_type)
-WORLD_CLOCKS = [
-    ("\u4f2f\u514b\u5229", -8, "us"),      # Berkeley (Pacific)
-    ("\u7ebd\u7ea6", -5, "us"),             # New York (Eastern)
-    ("\u5df4\u9ece", 1, "eu"),              # Paris (CET)
-]
+WORLD_CLOCKS = config.WORLD_CLOCKS
 
 
 def _get_utc_offset(utc_dt, std_offset, dst_type):
