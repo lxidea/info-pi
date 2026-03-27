@@ -4,7 +4,7 @@
 
 树莓派信息看板 -- 在 800x480 屏幕上显示天气、日历、天文和系统状态。基于 Flask 和原生 HTML/CSS/JS，无需构建工具。
 
-![看板截图](screenshot.png?v=2)
+![看板截图](https://raw.githubusercontent.com/lxidea/info-pi/main/screenshot.png)
 
 ## 功能
 
@@ -92,7 +92,7 @@ English | [中文](#info-pi)
 
 A Raspberry Pi kiosk dashboard that displays weather, calendar, astronomy, and system stats on an 800x480 screen. Built with Flask and plain HTML/CSS/JS -- no build tools required.
 
-![Dashboard Screenshot](screenshot.png?v=2)
+![Dashboard Screenshot](https://raw.githubusercontent.com/lxidea/info-pi/main/screenshot.png)
 
 ## Features
 
