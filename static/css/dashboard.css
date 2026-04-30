@@ -364,6 +364,7 @@ body {
 .astro-mw .mw-note {
     color: #8b949e;
     font-size: 14px;
+    margin-left: 2px;
 }
 
 .astro-event {
@@ -401,6 +402,10 @@ body {
 
 /* Calendar */
 #calendar-card {
+    flex: 0 0 auto;
+}
+
+#astro-card {
     flex: 1;
 }
 
