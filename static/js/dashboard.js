@@ -198,16 +198,44 @@ function updateHourly(w) {
     container.appendChild(grid);
 }
 
-var MOON_EMOJI = {
-    "New Moon": "\u25CF",          // ● New Moon
-    "Waxing Crescent": "\u25D1",   // ◑ Waxing Crescent
-    "First Quarter": "\u25D1",     // ◑ First Quarter
-    "Waxing Gibbous": "\u25D1",    // ◑ Waxing Gibbous
-    "Full Moon": "\u25CB",         // ○ Full Moon
-    "Waning Gibbous": "\u25D0",    // ◐ Waning Gibbous
-    "Last Quarter": "\u25D0",      // ◐ Last Quarter
-    "Waning Crescent": "\u25D0"    // ◐ Waning Crescent
-};
+// Render an accurate moon phase as inline SVG using actual illumination %
+// and waxing/waning direction from phase_en name.
+function svgMoonPhase(phaseEn, illum, size) {
+    size = size || 18;
+    var f = parseFloat(illum) / 100;
+    if (isNaN(f)) f = 0.5;
+
+    var waning = false;
+    if (phaseEn) {
+        waning = phaseEn.indexOf("Waning") >= 0 || phaseEn.indexOf("Last") >= 0;
+    }
+
+    var r = 14, cx = 16, cy = 16;
+    var s = '<svg viewBox="0 0 32 32" width="' + size + '" height="' + size +
+            '" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle">';
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r +
+         '" fill="#2a3142" stroke="#4a5060" stroke-width="0.8"/>';
+
+    if (f >= 0.005 && f <= 0.995) {
+        var rx = Math.abs(1 - 2 * f) * r;
+        var outerSweep, innerSweep;
+        if (!waning) {
+            outerSweep = 1;
+            innerSweep = (f < 0.5) ? 0 : 1;
+        } else {
+            outerSweep = 0;
+            innerSweep = (f < 0.5) ? 1 : 0;
+        }
+        s += '<path d="M ' + cx + ',' + (cy - r) +
+             ' A ' + r + ',' + r + ' 0 0,' + outerSweep + ' ' + cx + ',' + (cy + r) +
+             ' A ' + rx + ',' + r + ' 0 0,' + innerSweep + ' ' + cx + ',' + (cy - r) +
+             ' Z" fill="#f5e6c8"/>';
+    } else if (f > 0.995) {
+        s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#f5e6c8"/>';
+    }
+    s += '</svg>';
+    return s;
+}
 
 var MW_RATING_CLASS = {
     "\u6781\u4f73": "mw-excellent",
@@ -245,12 +273,12 @@ function updateAstronomy(weather, events) {
         '</div>';
 
     // Right column: moon phase, milky way, events
-    var moonEmoji = MOON_EMOJI[astro.moon_phase_en] || "\u25CB";
+    var moonSvg = svgMoonPhase(astro.moon_phase_en, astro.moon_illumination, 20);
     var mwClass = MW_RATING_CLASS[astro.milky_way_rating] || "mw-fair";
 
     var rightHtml =
         '<div class="astro-row">' +
-            '<span class="astro-icon">' + moonEmoji + '</span>' +
+            '<span class="astro-icon astro-moon-svg">' + moonSvg + '</span>' +
             '<span class="astro-moon-phase">' + astro.moon_phase + '</span>' +
             '<span class="astro-moon-illum">' + astro.moon_illumination + '%</span>' +
         '</div>' +

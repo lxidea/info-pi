@@ -318,6 +318,15 @@ body {
     width: 24px;
     text-align: center;
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.astro-row .astro-icon.astro-moon-svg svg {
+    width: 22px;
+    height: 22px;
+    display: block;
 }
 
 .astro-row .astro-label {
