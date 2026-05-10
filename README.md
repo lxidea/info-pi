@@ -2,6 +2,8 @@
 
 [English](#english) | 中文
 
+> **其他版本**：超宽屏（1920×440 条形屏 + Orange Pi Zero 2W）请见 [`ultrawide-1920x440` 分支](https://github.com/lxidea/info-pi/tree/ultrawide-1920x440) — 重新设计的卡片化布局、LCD 数字时钟、24h 天球弧线等。
+
 树莓派信息看板 -- 在 800x480 屏幕上显示天气、日历、天文和系统状态。基于 Flask 和原生 HTML/CSS/JS，无需构建工具。
 
 ![看板截图](https://raw.githubusercontent.com/lxidea/info-pi/main/screenshot.png)
@@ -89,6 +91,8 @@ MIT
 # Info-Pi
 
 English | [中文](#info-pi)
+
+> **Other variants**: For an ultra-wide bar screen (1920×440 + Orange Pi Zero 2W), see the [`ultrawide-1920x440` branch](https://github.com/lxidea/info-pi/tree/ultrawide-1920x440) — redesigned card layout, LCD digital clock, 24-hour celestial arc, and more.
 
 A Raspberry Pi kiosk dashboard that displays weather, calendar, astronomy, and system stats on an 800x480 screen. Built with Flask and plain HTML/CSS/JS -- no build tools required.
 
