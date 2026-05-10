@@ -1,493 +1,745 @@
-/* Info-Pi Dashboard — Dark theme, 800x480 optimized */
+/* ═══════════════════════════════════════════════
+   Info-Pi · Meridian v5 — Digital Clock Edition
+   1920 × 440 ultra-wide
+   ═══════════════════════════════════════════════ */
+
+@font-face {
+    font-family: 'DSEG7';
+    src: url('/static/fonts/DSEG7Classic-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: 'DSEG14';
+    src: url('/static/fonts/DSEG14Classic-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/static/fonts/Inter-Variable.ttf') format('truetype-variations'),
+         url('/static/fonts/Inter-Variable.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('/static/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('/static/fonts/JetBrainsMono-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: block;
+}
 
 :root {
-    --bg-primary: #0d1117;
-    --bg-secondary: #161b22;
-    --bg-border: #30363d;
+    --bg-primary: #0a0e14;
+    --bg-card: #131820;
+    --bg-card-soft: #1a2030;
+    --bg-pill: #1f2733;
+    --bg-border: #232b3a;
+    --c-time: #5ba0d0;
+    --c-time-glow: #5ba0d055;
+    --c-temp: #e8913a;
+    --c-text: #e6edf3;
+    --c-dim: #8b949e;
+    --c-faint: #555d66;
+    --c-green: #3fb950;
+    --c-red: #f85149;
+    --c-gold: #d29922;
+    --c-amber: #e3b341;
+    --c-moon: #c8d3e0;
+    --f-digital: 'DSEG7', 'Liberation Mono', monospace;
+    --f-digital14: 'DSEG14', 'Liberation Mono', monospace;
+    --f-thin: 'Inter', 'Cantarell Thin', 'Cantarell Light', sans-serif;
+    --f-body: 'Inter', 'Noto Sans CJK SC', 'Cantarell', 'Liberation Sans', sans-serif;
+    --f-mono: 'JetBrains Mono', 'Liberation Mono', 'DejaVu Sans Mono', monospace;
+    --f-sym: 'DejaVu Sans', 'FreeSans', sans-serif;
+    --r-card: 18px;
+    --r-pill: 999px;
+    --r-inner: 12px;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
+    width: 1920px; height: 440px;
+    overflow: hidden; cursor: none;
     background: var(--bg-primary);
-    transition: background-color 2s ease;
-    color: #c9d1d9;
-    font-family: 'Segoe UI', 'Liberation Sans', Arial, sans-serif;
+    color: var(--c-text);
+    font-family: var(--f-body);
+    font-weight: 400;
     font-size: 16px;
-    width: 800px;
-    height: 480px;
-    overflow: hidden;
-    cursor: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 2s ease;
 }
 
 .dashboard {
-    width: 800px;
-    height: 480px;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Header */
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 16px;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--bg-border);
-    transition: background-color 2s ease, border-color 2s ease;
-    height: 40px;
-    flex-shrink: 0;
-}
-
-.date {
-    font-size: 17px;
-    color: #8b949e;
-}
-
-.day {
-    font-size: 17px;
-    color: #8b949e;
-}
-
-.time {
-    font-size: 24px;
-    font-weight: 700;
-    color: #58a6ff;
-    font-variant-numeric: tabular-nums;
-}
-
-/* World Clocks */
-.world-clocks {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0;
-    padding: 4px 16px;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--bg-border);
-    transition: background-color 2s ease, border-color 2s ease;
-    height: 34px;
-    flex-shrink: 0;
-    font-size: 18px;
-    color: #8b949e;
-}
-
-.world-clock-sep {
-    color: var(--bg-border);
-    margin: 0 20px;
-    font-size: 18px;
-}
-
-.world-clock-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.world-clock-item .wc-city {
-    color: #8b949e;
-}
-
-.world-clock-item .wc-time {
-    color: #c9d1d9;
-    font-family: 'Liberation Mono', 'DejaVu Sans Mono', 'Noto Mono', monospace;
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-}
-
-.world-clock-item .wc-offset {
-    color: #8b949e;
-    font-size: 14px;
-}
-
-.world-clock-item .wc-temp {
-    color: #f0883e;
-    font-size: 16px;
-    margin-left: 2px;
-}
-
-/* Grid — 2-column: weather left, calendar+astro right */
-.grid {
+    width: 1920px; height: 440px;
     display: grid;
-    grid-template-columns: 1fr 270px;
-    gap: 1px;
-    flex: 1;
-    background: var(--bg-border);
-    transition: background-color 2s ease;
-}
-
-.grid-left,
-.grid-right {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    background: var(--bg-border);
-}
-
-.grid-left {
-    min-height: 0;
-}
-
-.grid-left .card {
-    flex: 1;
-}
-
-.grid-right {
-    min-height: 0;
-}
-
-/* Cards */
-.card {
-    background: var(--bg-primary);
-    transition: background-color 2s ease;
-    padding: 8px 16px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.card-body {
-    flex: 1;
-    overflow: hidden;
-}
-
-#weather-body {
-    display: flex;
-    flex-direction: column;
-}
-
-/* Weather */
-.weather-main {
-    display: flex;
-    align-items: baseline;
-    gap: 14px;
-    margin-bottom: 10px;
-}
-
-.weather-temp {
-    font-size: 56px;
-    font-weight: 700;
-    color: #f0883e;
-    font-variant-numeric: tabular-nums;
-}
-
-.weather-desc {
-    font-size: 26px;
-    color: #c9d1d9;
-}
-
-.weather-icon-sym {
-    font-family: 'DejaVu Sans', 'FreeSans', sans-serif;
-}
-
-.weather-details {
-    display: flex;
-    gap: 6px;
-    font-size: 15px;
-    color: #8b949e;
-    margin-bottom: 12px;
-}
-
-.weather-details > span + span::before {
-    content: "|";
-    margin-right: 6px;
-    color: #484e55;
-}
-
-.aqi-badge {
-    font-weight: 600;
-}
-
-.aqi-badge.aqi-good { color: #3fb950; }
-.aqi-badge.aqi-moderate { color: #58a6ff; }
-.aqi-badge.aqi-unhealthy { color: #d29922; }
-.aqi-badge.aqi-bad { color: #f85149; }
-
-.forecast {
-    display: flex;
+    grid-template-columns: 480px 480px 420px 1fr;
     gap: 12px;
-    font-size: 16px;
-    color: #8b949e;
+    padding: 12px;
 }
 
-.forecast-day {
-    flex: 1;
-    background: var(--bg-secondary);
+.panel {
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-card);
+    border-radius: var(--r-card);
     transition: background-color 2s ease;
-    padding: 6px 12px;
-    border-radius: 4px;
+    position: relative;
+}
+
+/* ═══════════ P1: CLOCK ═══════════ */
+
+.p-clock {
+    padding: 16px 24px 14px;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #131a26 0%, #1a2230 100%);
+    border: 1px solid rgba(91, 160, 208, 0.15);
+}
+
+/* Digital LCD time — uses DSEG7 segment-display font */
+.clk-time {
+    font-family: var(--f-digital);
+    font-size: 122px;
+    color: var(--c-time);
+    line-height: 0.85;
     text-align: center;
-    line-height: 1.5;
+    text-shadow: 0 0 18px var(--c-time-glow);
+    position: relative;
+    margin: 0 auto;
 }
 
-.forecast-day .temp {
-    color: #c9d1d9;
-    font-weight: 600;
-    font-size: 17px;
+/* Faint guide segments for LCD authenticity */
+.clk-time::before {
+    content: "88:88";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    color: var(--c-time);
+    opacity: 0.06;
+    pointer-events: none;
 }
 
-/* Hourly forecast timeline */
-.hourly {
-    margin-top: 10px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.hourly-label {
-    font-size: 14px;
-    color: #8b949e;
-    margin-bottom: 4px;
-}
-
-.hourly-grid {
-    display: flex;
-    gap: 0;
-    flex: 1;
-    min-height: 0;
-}
-
-.hourly-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+.clk-date-block {
+    display: flex; flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
-    gap: 1px;
+    gap: 4px;
+    margin-top: 4px;
 }
 
-.hourly-col .h-hour {
-    font-size: 12px;
-    color: #8b949e;
-    font-family: 'Liberation Mono', 'DejaVu Sans Mono', 'Noto Mono', monospace;
+.clk-date {
+    font-size: 28px;
+    color: var(--c-text);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    letter-spacing: 1px;
 }
 
-.hourly-col .h-icon {
-    font-size: 14px;
-    font-family: 'DejaVu Sans', 'FreeSans', sans-serif;
+.clk-sub {
+    font-size: 24px;
+    color: var(--c-dim);
+    display: flex; align-items: center; gap: 8px;
 }
 
-.hourly-col .h-temp {
-    font-size: 13px;
-    color: #c9d1d9;
-    font-weight: 600;
-}
+.dot-sep::after { content: "\00b7"; color: var(--c-faint); margin: 0 2px; }
 
-.hourly-col .h-bar {
-    width: 26px;
-    border-radius: 3px 3px 0 0;
-    min-height: 4px;
-}
-
-.hourly-col.h-now .h-hour {
-    color: #58a6ff;
-    font-weight: 700;
-}
-
-.hourly-col.h-now .h-temp {
-    color: #58a6ff;
-}
-
-/* Astronomy — single-column in right sidebar */
-.astro-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.astro-col {
+/* World clock — 3 vertical cards in a row */
+.clk-world {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
     width: 100%;
 }
 
-.astro-row {
-    display: flex;
+.wc-card {
+    display: flex; flex-direction: column;
     align-items: center;
-    gap: 6px;
-    font-size: 15px;
-    line-height: 1.7;
-    color: #c9d1d9;
+    gap: 2px;
+    padding: 8px 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: var(--r-inner);
 }
 
-.astro-row .astro-icon {
+.wc-card .wc-top {
+    display: flex; align-items: center; gap: 4px;
+    height: 36px;
+}
+
+.wc-card .wc-icon {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.wc-card .wc-icon svg { width: 32px; height: 32px; }
+
+.wc-card .wc-temp {
+    color: var(--c-temp);
     font-size: 18px;
-    width: 24px;
-    text-align: center;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.wc-card .wc-time {
+    font-family: var(--f-mono);
+    font-size: 22px; font-weight: 700;
+    color: var(--c-text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-top: 2px;
+    display: flex; align-items: baseline; gap: 4px;
+}
+
+.wc-card .wc-time .wc-offset {
+    font-size: 11px; color: var(--c-faint);
+    font-weight: 500;
+}
+
+.wc-card .wc-city {
+    font-size: 16px; color: var(--c-text);
+    font-weight: 600;
+    margin-top: 3px;
+}
+
+.wc-card .wc-desc {
+    font-size: 13px; color: #b3bbc5;
+    margin-top: 1px;
+}
+
+/* ═══════════ P2: WEATHER ═══════════ */
+
+.p-weather {
+    padding: 16px 22px 14px;
+    gap: 10px;
+}
+
+/* Top row: hero temp + metric grid */
+.wx-top {
+    display: flex; align-items: stretch;
+    gap: 16px;
     flex-shrink: 0;
 }
 
-.astro-row .astro-label {
-    color: #8b949e;
-    font-size: 14px;
-    width: 32px;
+.wx-hero {
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+    justify-content: center;
+}
+
+.wx-hero-row {
+    display: flex; align-items: baseline; gap: 10px;
+}
+
+.wx-icon-svg {
+    width: 56px; height: 56px;
     flex-shrink: 0;
 }
 
-.astro-row .astro-value {
-    font-family: 'Liberation Mono', 'DejaVu Sans Mono', 'Noto Mono', monospace;
-    font-size: 15px;
+.wx-temp {
+    font-family: var(--f-body);
+    font-weight: 200;
+    font-size: 76px; color: var(--c-temp);
+    letter-spacing: -3px; line-height: 1;
+    font-variant-numeric: tabular-nums;
 }
 
-.astro-moon-phase {
-    color: #e3b341;
+.wx-desc {
+    font-size: 22px;
+    color: var(--c-text);
+    margin-top: 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.wx-range {
+    font-size: 16px;
+    color: var(--c-dim);
+    font-family: var(--f-mono);
     font-weight: 600;
 }
 
-.astro-moon-illum {
-    color: #8b949e;
-    font-size: 15px;
-    margin-left: 4px;
-}
-
-.astro-mw {
-    display: flex;
-    align-items: center;
+/* Metric grid — 2 columns, all pills equal */
+.wx-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 6px;
-    font-size: 14px;
-    line-height: 1.7;
-}
-
-
-.astro-mw .mw-rating {
-    font-weight: 600;
-}
-
-.astro-mw .mw-rating.mw-excellent { color: #3fb950; }
-.astro-mw .mw-rating.mw-good { color: #58a6ff; }
-.astro-mw .mw-rating.mw-fair { color: #d29922; }
-.astro-mw .mw-rating.mw-poor { color: #8b949e; }
-
-.astro-mw .mw-note {
-    color: #8b949e;
-    font-size: 14px;
-    margin-left: 2px;
-}
-
-.astro-event {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    line-height: 1.7;
-    color: #c9d1d9;
-}
-
-.astro-event .event-name {
     flex: 1;
+    align-content: center;
+}
+
+/* SVG curve chart */
+.wx-chart {
+    flex: 0 0 130px;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: var(--r-inner);
+    padding: 4px 4px 2px;
+}
+
+.wx-chart svg { width: 100%; height: 100%; }
+
+.wx-chart .chart-area { fill: url(#tempGrad); opacity: 0.3; }
+.wx-chart .chart-line { fill: none; stroke: var(--c-temp); stroke-width: 2; stroke-linejoin: round; }
+.wx-chart .chart-dot { fill: var(--c-temp); }
+.wx-chart .chart-dot-now { fill: var(--c-time); }
+
+.wx-chart .chart-temp-label {
+    fill: var(--c-text); font-size: 13px;
+    font-family: var(--f-mono); font-weight: 600;
+    text-anchor: middle;
+}
+
+.wx-chart .chart-hour-label {
+    fill: var(--c-dim); font-size: 12px;
+    font-family: var(--f-mono); text-anchor: middle;
+}
+
+.wx-chart .chart-icon {
+    fill: var(--c-dim); font-size: 14px;
+    font-family: var(--f-sym); text-anchor: middle;
+}
+
+.wx-chart .chart-now-label {
+    fill: var(--c-time); font-size: 12px;
+    font-family: var(--f-mono); font-weight: 700; text-anchor: middle;
+}
+
+/* Forecast — horizontal cards: icon left, info right */
+.wx-forecast {
+    display: flex; gap: 8px;
+    flex: 1;
+    min-height: 0;
+}
+
+.fc-card {
+    flex: 1;
+    background: var(--bg-pill);
+    transition: background-color 2s ease;
+    border-radius: var(--r-inner);
+    padding: 8px 12px;
+    display: flex; align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.fc-card .fc-i {
+    flex-shrink: 0;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.fc-card .fc-i svg { width: 44px; height: 44px; }
+
+.fc-card .fc-info {
+    display: flex; flex-direction: column;
+    gap: 0;
+    min-width: 0;
+    flex: 1;
+}
+
+.fc-card .fc-d {
+    color: var(--c-dim);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.astro-event .event-date {
-    color: #8b949e;
-    font-size: 15px;
-    margin-left: 10px;
+.fc-card .fc-t {
+    color: var(--c-text);
+    font-weight: 700;
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+}
+
+.fc-card .fc-wind {
+    color: var(--c-dim);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 3px;
+}
+
+.fc-card .fc-wind-arrow {
+    width: 14px; height: 14px;
     flex-shrink: 0;
 }
 
-.astro-event .event-countdown {
-    color: #58a6ff;
-    font-size: 15px;
-    font-weight: 600;
-    margin-left: 10px;
-    flex-shrink: 0;
-    width: 44px;
-    text-align: right;
+/* Pill styles - 2-line: small label on top, big value below */
+.m-pill {
+    display: flex; flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: var(--bg-pill);
+    transition: background-color 2s ease;
+    color: var(--c-dim);
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
-/* Calendar */
-#calendar-card {
-    flex: 0 0 auto;
+.m-pill > span:first-child {
+    font-size: 12px;
+    color: var(--c-dim);
+    line-height: 1.1;
+    letter-spacing: 0.5px;
 }
 
-#astro-card {
-    flex: 1;
+.m-pill .mv {
+    color: var(--c-text); font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 17px;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
+
+.m-pill.aqi-good .mv { color: var(--c-green); }
+.m-pill.aqi-moderate .mv { color: var(--c-time); }
+.m-pill.aqi-unhealthy .mv { color: var(--c-gold); }
+.m-pill.aqi-bad .mv { color: var(--c-red); }
+
+/* ═══════════ P3: CALENDAR ═══════════ */
+
+.p-cal {
+    padding: 14px 20px 14px;
+    gap: 8px;
+}
+
+.cal-grid-wrap { width: 100%; flex-shrink: 0; }
 
 .cal-header {
     text-align: center;
-    font-size: 15px;
-    color: #8b949e;
-    margin-bottom: 4px;
-    font-weight: 600;
+    font-size: 18px; color: var(--c-text);
+    font-weight: 600; letter-spacing: 2px;
+    margin-bottom: 8px;
 }
 
 .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
-    font-size: 14px;
-    line-height: 1.1;
+    gap: 4px;
 }
 
 .cal-dow {
-    color: #58a6ff;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 2px 0;
+    font-size: 14px; font-weight: 600;
+    color: var(--c-time); opacity: 0.65;
+    padding: 2px 0 6px;
 }
 
 .cal-day {
-    padding: 3px 0;
-    color: #c9d1d9;
-    border-radius: 3px;
+    padding: 6px 0;
+    font-size: 16px;
+    color: var(--c-text);
+    border-radius: 10px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.15;
 }
 
-.cal-day.empty {
-    visibility: hidden;
-}
+.cal-day.empty { visibility: hidden; }
 
 .cal-day.today {
-    background: #58a6ff;
-    color: #0d1117;
-    font-weight: 700;
-    border-radius: 50%;
-    min-width: 24px;
-    height: 24px;
-    line-height: 24px;
-    padding: 0 2px;
-    margin: 0 auto;
+    background: linear-gradient(135deg, #6fb6e5 0%, #4a8dbf 100%);
+    color: #fff;
+    font-weight: 800;
+    font-size: 18px;
+    box-shadow: 0 0 0 2px rgba(91,160,208,0.4), 0 0 18px rgba(91,160,208,0.5);
+    transform: scale(1.05);
 }
 
 .cal-day.weekend {
-    color: #8b949e;
+    color: #d97070;
+    background: rgba(217, 112, 112, 0.06);
 }
 
 .cal-day.holiday {
-    color: #f85149;
+    background: rgba(248,81,73,0.12);
+    color: var(--c-red);
 }
 
 .cal-day.workday {
-    color: #d29922;
+    background: rgba(210,153,34,0.12);
+    color: var(--c-gold);
 }
 
 .cal-day.today.holiday {
-    background: #f85149;
-    color: #0d1117;
+    background: var(--c-red); color: var(--bg-primary);
+    box-shadow: 0 0 14px rgba(248,81,73,0.35);
 }
 
 .cal-day.today.workday {
-    background: #d29922;
-    color: #0d1117;
+    background: var(--c-gold); color: var(--bg-primary);
+    box-shadow: 0 0 14px rgba(210,153,34,0.35);
 }
 
-/* System status bar */
-.status-bar {
-    background: var(--bg-secondary);
-    transition: background-color 2s ease;
-    border-top: 1px solid var(--bg-border);
-    height: 28px;
+/* Holiday list — bigger, properly placed */
+.cal-holidays {
+    background: var(--bg-pill);
+    border-radius: var(--r-inner);
+    padding: 10px 14px;
+    display: flex; flex-direction: column;
+    gap: 6px;
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
+    margin-top: 4px;
+}
+
+.hol-title {
+    font-size: 13px;
+    color: var(--c-dim);
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.hol-item {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 15px;
+}
+
+.hol-item .hol-date {
+    font-family: var(--f-mono);
+    font-size: 14px; color: var(--c-dim);
+    width: 50px; flex-shrink: 0;
+    font-weight: 600;
+}
+
+.hol-item .hol-name {
+    color: var(--c-text); font-size: 15px;
+    flex: 1;
+}
+.hol-item .hol-name.hol-rest { color: var(--c-red); }
+.hol-item .hol-name.hol-work { color: var(--c-gold); }
+
+.hol-item .hol-cd {
+    color: var(--c-time); font-size: 14px;
+    font-weight: 600;
+    font-family: var(--f-mono);
+    margin-left: auto;
+}
+
+/* ═══════════ P4: OBSERVATORY ═══════════ */
+
+.p-obs {
+    padding: 14px 18px 12px;
+    gap: 8px;
+}
+
+.obs-sky {
+    flex: 0 0 165px;
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: var(--r-inner);
+    padding: 4px 8px;
+}
+
+.obs-sky svg { width: 100%; height: 100%; }
+
+.obs-sky .arc-path {
+    fill: url(#sunArcGrad);
+    stroke: var(--c-temp);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    opacity: 0.85;
+}
+
+.obs-sky .moon-arc {
+    fill: url(#moonArcGrad);
+    stroke: var(--c-moon);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    opacity: 0.75;
+}
+
+.obs-sky .horizon-line {
+    stroke: var(--c-faint); stroke-width: 0.8;
+    opacity: 0.5;
+}
+
+.obs-sky .sky-label {
+    fill: #cdd5e0; font-size: 14px;
+    font-family: var(--f-mono);
+    font-weight: 700;
+}
+
+.obs-sky .sky-label-tiny {
+    fill: var(--c-dim); font-size: 12px;
+    font-family: var(--f-body);
+}
+
+.obs-sky .sky-body-sun {
+    font-size: 38px; font-family: var(--f-sym);
+    fill: var(--c-temp);
+    dominant-baseline: central; text-anchor: middle;
+    filter: drop-shadow(0 0 5px rgba(232, 145, 58, 0.6));
+}
+
+.obs-sky .sky-body-moon {
+    font-size: 32px; font-family: var(--f-sym);
+    fill: var(--c-moon);
+    dominant-baseline: central; text-anchor: middle;
+    filter: drop-shadow(0 0 4px rgba(200, 211, 224, 0.55));
+}
+
+.obs-sky .sky-body-below { opacity: 0.22; }
+
+.obs-sky .sky-now-marker {
+    stroke: var(--c-text); stroke-width: 1;
+    opacity: 0.5;
+    stroke-dasharray: 2 2;
+}
+
+.obs-sky .sky-now-text {
+    fill: var(--c-text); font-size: 12px;
+    font-family: var(--f-body);
+    font-weight: 700;
+}
+
+.obs-sky .sky-tick {
+    stroke: var(--c-faint); stroke-width: 1.5; opacity: 0.6;
+}
+
+.obs-sky .sky-hour {
+    fill: var(--c-dim); font-size: 13px;
+    font-family: var(--f-mono); font-weight: 600;
+}
+
+.obs-sky .sky-rise-set {
+    fill: var(--c-temp); font-size: 14px;
+    font-family: var(--f-mono); font-weight: 700;
+}
+
+.obs-sky .sky-moon-tick {
+    fill: var(--c-moon); font-size: 14px;
+    font-family: var(--f-mono); font-weight: 700;
+}
+
+.obs-sky .sky-event-line {
+    stroke-width: 1.2;
+    stroke-dasharray: 3 3;
+    opacity: 0.55;
+}
+
+.obs-sky .sky-event-line.sun {
+    stroke: var(--c-temp);
+}
+
+.obs-sky .sky-event-line.moon {
+    stroke: var(--c-moon);
+}
+
+/* Astronomy data — clearer rows */
+.obs-info {
+    flex: 1; display: flex; flex-direction: column;
+    gap: 5px;
+    min-height: 0;
+}
+
+.obs-row {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 15px;
+    color: var(--c-text);
+    line-height: 1.5;
+}
+
+.obs-row.obs-rs {
     font-size: 14px;
-    color: #8b949e;
-    font-family: 'Liberation Mono', 'DejaVu Sans Mono', 'Noto Mono', monospace;
+}
+
+.obs-row.obs-rs .obs-label { font-size: 13px; }
+.obs-row.obs-rs .obs-val { font-size: 14px; }
+
+.obs-rs-sun { color: var(--c-temp); }
+.obs-rs-moon { color: var(--c-moon); }
+
+.obs-row .obs-icon {
+    font-family: var(--f-sym);
+    font-size: 17px; width: 24px;
+    text-align: center; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+
+.obs-row .obs-icon svg {
+    display: block;
+}
+
+.obs-moon-icon svg {
+    width: 26px; height: 26px;
+}
+
+.obs-row .obs-label {
+    color: var(--c-dim); font-size: 15px;
+    flex-shrink: 0;
+    width: 56px;
+}
+
+.obs-row .obs-val {
+    font-family: var(--f-mono);
+    font-size: 16px;
+    color: var(--c-text);
+    font-variant-numeric: tabular-nums;
+    flex: 1;
+}
+
+.obs-row.obs-moon .obs-val {
+    font-family: var(--f-body);
+    color: var(--c-amber);
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.obs-row.obs-mw .obs-val { font-family: var(--f-body); font-size: 15px; }
+.obs-row.obs-mw .mw-rating.mw-excellent { color: var(--c-green); font-weight: 600; }
+.obs-row.obs-mw .mw-rating.mw-good { color: var(--c-time); font-weight: 600; }
+.obs-row.obs-mw .mw-rating.mw-fair { color: var(--c-gold); font-weight: 600; }
+.obs-row.obs-mw .mw-rating.mw-poor { color: var(--c-dim); font-weight: 600; }
+
+.obs-row.obs-event .obs-val {
+    flex: 1; font-family: var(--f-body);
+    font-size: 15px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.obs-row.obs-event .obs-cd {
+    color: var(--c-time); font-weight: 600;
+    font-family: var(--f-mono); font-size: 15px;
+}
+
+/* Environment pills */
+.obs-env {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-top: auto;
+}
+
+.obs-env .m-pill { font-size: 13px; padding: 4px 10px; }
+
+.obs-sys {
+    flex-shrink: 0; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px;
+    font-family: var(--f-mono);
+    font-size: 13px; color: var(--c-dim);
+    background: var(--bg-pill);
+    border-radius: var(--r-pill);
+    padding: 0 14px;
+    margin-top: 4px;
 }

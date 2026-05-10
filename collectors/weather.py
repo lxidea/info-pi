@@ -149,7 +149,8 @@ def collect():
         "&current=temperature_2m,relative_humidity_2m,apparent_temperature,"
         "weather_code,wind_speed_10m,wind_direction_10m"
         "&hourly=temperature_2m,weather_code"
-        "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset"
+        "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,"
+        "wind_speed_10m_max,wind_direction_10m_dominant"
         "&timezone=auto&forecast_days=3"
     ).format(lat=lat, lon=lon)
 
@@ -212,14 +213,21 @@ def collect():
 
     forecast = []
     times = daily.get("time", [])
+    wind_max = daily.get("wind_speed_10m_max", [])
+    wind_deg_arr = daily.get("wind_direction_10m_dominant", [])
     for i in range(len(times)):
         fcode = daily.get("weather_code", [0])[i] if i < len(daily.get("weather_code", [])) else 0
+        wmax = int(round(wind_max[i])) if i < len(wind_max) else 0
+        wdeg = int(wind_deg_arr[i]) if i < len(wind_deg_arr) else 0
         forecast.append({
             "date": times[i],
             "max_c": str(int(round(daily["temperature_2m_max"][i]))),
             "min_c": str(int(round(daily["temperature_2m_min"][i]))),
             "desc": WMO_CODES.get(fcode, ""),
             "weather_code": fcode,
+            "wind_speed_kmh": wmax,
+            "wind_dir_deg": wdeg,
+            "wind_dir": _wind_direction(wdeg),
         })
 
     sunrise_raw = daily.get("sunrise", [""])[0]
@@ -271,6 +279,7 @@ def collect():
         "humidity": str(cur.get("relative_humidity_2m", "")),
         "wind_speed_kmh": str(int(round(cur.get("wind_speed_10m", 0)))),
         "wind_dir": _wind_direction(wind_deg),
+        "wind_dir_deg": int(wind_deg),
         "forecast": forecast,
         "hourly": hourly,
         "astronomy": astronomy,

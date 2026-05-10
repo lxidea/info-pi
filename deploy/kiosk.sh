@@ -6,11 +6,14 @@ xset s off
 xset -dpms
 xset s noblank
 
+# Set display rotation for ultra-wide bar screen
+xrandr --output HDMI-1 --mode 440x1920 --rotate right 2>/dev/null || true
+
 # Hide cursor
 unclutter -idle 0.1 -root &
 
 # Launch Chromium in kiosk mode
-exec chromium-browser \
+exec chromium \
     --noerrdialogs \
     --disable-infobars \
     --kiosk \
@@ -20,6 +23,10 @@ exec chromium-browser \
     --fast \
     --fast-start \
     --disable-features=TranslateUI \
-    --window-size=800,480 \
+    --disable-breakpad \
+    --disable-crash-reporter \
+    --disable-component-update \
+    --disable-gpu-shader-disk-cache \
+    --window-size=1920,440 \
     --window-position=0,0 \
     http://localhost:5000

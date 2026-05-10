@@ -65,15 +65,17 @@ HOLIDAYS = {
 
 
 def get_month_markers(year=None, month=None):
-    """Return holiday and workday markers for a given month.
+    """Return holiday and workday markers for a given month, plus
+    next upcoming holiday for forward-looking display.
 
     Returns:
         dict with:
             "holidays": {day_int: "name", ...}
             "workdays": [day_int, ...]
+            "next_holiday": {"name": str, "date": "YYYY-MM-DD", "days_away": int}
     """
+    today = datetime.date.today()
     if year is None or month is None:
-        today = datetime.date.today()
         year = today.year
         month = today.month
 
@@ -91,4 +93,28 @@ def get_month_markers(year=None, month=None):
         if date_str.startswith(month_prefix):
             workdays.append(int(date_str[3:5]))
 
-    return {"holidays": holidays, "workdays": workdays}
+    # Find next upcoming holiday across this and next year
+    next_holiday = None
+    seen_names = set()
+    candidates = []
+    for yr in (today.year, today.year + 1):
+        yd = HOLIDAYS.get(yr, {})
+        for date_str, name in yd.get("holidays", {}).items():
+            try:
+                d = datetime.date(yr, int(date_str[:2]), int(date_str[3:5]))
+            except ValueError:
+                continue
+            if d >= today and name not in seen_names:
+                candidates.append((d, name))
+                seen_names.add(name)
+    if candidates:
+        candidates.sort(key=lambda x: x[0])
+        d, name = candidates[0]
+        next_holiday = {
+            "name": name,
+            "date": d.isoformat(),
+            "month_day": d.strftime("%m-%d"),
+            "days_away": (d - today).days,
+        }
+
+    return {"holidays": holidays, "workdays": workdays, "next_holiday": next_holiday}
