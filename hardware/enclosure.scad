@@ -72,9 +72,18 @@ mount_spacing_y = 35;     // pattern height (smaller to fit 80mm height)
 mount_post_h = 4;          // boss height for heat-set insert
 mount_insert_d = 4.0;      // hole for M3 heat-set insert (3.5mm taper)
 
-// Cable cutouts on bottom edge
-cable_cut_w = 30;
-cable_cut_h = 8;
+// Cable cutout (bottom edge of the enclosure)
+// Sized for 1× Type-C power cable + 1× optional HDMI strain relief
+cable_cut_w = 36;     // wide enough for Type-C + room for cable bend
+cable_cut_h = 9;      // tall enough for Type-C connector body
+cable_cut_offset = 0; // 0 = centered along bottom edge; +N moves right
+
+// Touch panel FFC ribbon slot (right side wall, near driver board's
+// I2C connector). Small flat slot for a future 6-pin touch ribbon.
+touch_slot_w = 8;     // ribbon width + margin
+touch_slot_h = 1.5;   // ribbon thickness + margin
+touch_slot_z = 0;     // vertical center along the inner cavity (0 = mid)
+enable_touch_slot = true;
 
 // Echo computed sizes — useful for sanity checking
 echo("Total enclosure W:", total_w, "H:", total_h, "D:", total_d);
@@ -95,9 +104,10 @@ module rounded_rect(w, h, r, depth) {
 // ─── Front frame ──────────────────────────────────────────
 
 module front_frame() {
+    shell_depth = front_wall + inner_depth + 2;
     difference() {
         // Outer shell
-        rounded_rect(total_w, total_h, 4, front_wall + inner_depth + 2);
+        rounded_rect(total_w, total_h, 4, shell_depth);
         // Display window (visible area)
         translate([side_wall + bezel_inset,
                    side_wall + bezel_inset,
@@ -110,29 +120,48 @@ module front_frame() {
             cube([total_w - 2*side_wall,
                   total_h - 2*side_wall,
                   inner_depth + 5]);
+
+        // ── Cable cutout on the BOTTOM side wall (Type-C power + HDMI) ──
+        // Cuts a notch through the bottom wall into the cavity
+        cut_x = (total_w - cable_cut_w) / 2 + cable_cut_offset;
+        cut_z = front_wall + screen_t + 1;  // start just behind the screen
+        translate([cut_x, -1, cut_z])
+            cube([cable_cut_w, side_wall + 3, cable_cut_h]);
+        // Bottom edge chamfer (45° outside, prevents sharp edge cutting cable)
+        translate([cut_x, side_wall, cut_z + cable_cut_h])
+            rotate([45, 0, 0])
+                cube([cable_cut_w, 3, 3]);
+
+        // ── Touch FFC ribbon slot on the RIGHT side wall ──
+        if (enable_touch_slot) {
+            slot_z_pos = front_wall + screen_t + back_clearance +
+                         (max(board_t, pi_t) / 2) + touch_slot_z;
+            // Cut horizontally through right side wall
+            translate([total_w - side_wall - 1,
+                       (total_h - touch_slot_w) / 2,
+                       slot_z_pos - touch_slot_h / 2])
+                cube([side_wall + 3, touch_slot_w, touch_slot_h]);
+        }
     }
 }
 
 // ─── Back cover ───────────────────────────────────────────
 
 module back_cover() {
-    difference() {
-        union() {
-            // Outer plate
-            rounded_rect(total_w, total_h, 4, back_wall);
-            // Mounting posts for driver board (top center area)
-            translate([0, 0, back_wall])
-                board_mount_posts();
-            // Mounting posts for Orange Pi (bottom center area)
-            translate([0, 0, back_wall])
-                pi_mount_posts();
-            // VESA mount inserts in middle
-            translate([0, 0, back_wall])
-                vesa_mount_inserts();
-        }
-        // Cable cutout at bottom center
-        translate([(total_w - cable_cut_w) / 2, -1, back_wall + 0])
-            cube([cable_cut_w, cable_cut_h + 1, 50]);
+    // Outer plate + mounting features. Cable cutouts are handled by
+    // the front frame's side walls (front_frame module).
+    union() {
+        // Outer plate
+        rounded_rect(total_w, total_h, 4, back_wall);
+        // Mounting posts for driver board (right side, back view)
+        translate([0, 0, back_wall])
+            board_mount_posts();
+        // Mounting posts for Orange Pi (left side, back view)
+        translate([0, 0, back_wall])
+            pi_mount_posts();
+        // VESA mount inserts in middle
+        translate([0, 0, back_wall])
+            vesa_mount_inserts();
     }
 }
 
@@ -221,7 +250,7 @@ module wall_mount() {
 // ─── Render selector ──────────────────────────────────────
 // Set `part` to render one of the parts at a time
 
-part = "front";  // "front" | "back" | "wall" | "all"
+part = "all";  // "front" | "back" | "wall" | "all"
 
 if (part == "front")
     color("DimGray") front_frame();
