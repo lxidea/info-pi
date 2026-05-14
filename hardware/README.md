@@ -8,7 +8,6 @@
 - 输出 STL（需要 OpenSCAD 渲染）：
   - 前框 (`front`)
   - 后盖 (`back`)
-  - 桌面斜架 (`stand`)
   - 壁挂底板 (`wall`)
 
 ## 设计概览
@@ -69,12 +68,15 @@
 3. **后盖** 通过 4 颗 M3 螺丝（沿边缘）合上整体
 4. **VESA 接口** 后盖中央有 4 个 M3 黄铜热熔螺母，桌脚/壁挂底板二选一装上
 
-## 模块化挂载
+## 壁挂方案
 
-后盖的 75×35 VESA 接口可拆装两种附件：
+后盖中央有 75×35mm VESA 风格的螺孔阵列（4 个 M3），通过四颗螺丝固定到壁挂底板。
 
-- **桌面斜架**：A 字形底座，15° 后仰角，适合桌上摆放
-- **壁挂底板**：钥匙孔挂孔，挂在墙面螺丝上
+**壁挂底板**特性：
+- 顶部**钥匙孔槽**——只需在墙上拧一颗螺丝，把底板挂上去
+- 底部**防转销孔**——附加第二颗螺丝防止外壳转动
+- 4 颗 M3 沉头螺丝把后盖固定到底板上
+- 拆装方便：维护时直接抬起底板从挂钩取下
 
 ## 渲染和导出
 
@@ -85,7 +87,6 @@ sudo apt install openscad
 # 命令行渲染单个部件为 STL
 openscad -D 'part="front"' -o front.stl enclosure.scad
 openscad -D 'part="back"' -o back.stl enclosure.scad
-openscad -D 'part="stand"' -o stand.stl enclosure.scad
 openscad -D 'part="wall"' -o wall.stl enclosure.scad
 
 # 或者在 OpenSCAD GUI 里打开 enclosure.scad

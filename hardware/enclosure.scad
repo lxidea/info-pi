@@ -28,10 +28,22 @@ bezel_inset = 2;   // mm inward from screen edge
 
 // Driver board dimensions (HM-V1.0B)
 board_w = 72;
-board_h = 50;
+board_h = 49;
 board_t = 4;
-board_hole_d = 2.5;   // M2.5 mounting holes (adjust to actual)
-board_hole_inset = 3; // from each corner (adjust to actual)
+board_hole_d = 3.0;   // M3 mounting holes
+
+// Explicit driver board hole positions (PCB local coordinates,
+// origin = top-left corner near USB connectors).
+// Top edge (near USB-C / HDMI) — holes have only 0.5mm edge clearance
+// to the top, so center y is 0.5 + (hole_d/2) = 2.
+// Asymmetric x: left hole 6.5mm edge distance, right hole 1mm.
+// Bottom 2 holes are 19mm from the same reference edge.
+board_hole_pts = [
+    [6.5 + board_hole_d/2,           0.5 + board_hole_d/2],          // TL (8.0,  2.0)
+    [board_w - 1.0 - board_hole_d/2, 0.5 + board_hole_d/2],          // TR (69.5, 2.0)
+    [6.5 + board_hole_d/2,           19.0 + board_hole_d/2],         // BL (8.0,  20.5)
+    [board_w - 1.0 - board_hole_d/2, 19.0 + board_hole_d/2],         // BR (69.5, 20.5)
+];
 
 // Orange Pi Zero 2W
 pi_w = 65;
@@ -64,8 +76,10 @@ mount_insert_d = 4.0;      // hole for M3 heat-set insert (3.5mm taper)
 cable_cut_w = 30;
 cable_cut_h = 8;
 
-// Echo computed sizes
+// Echo computed sizes — useful for sanity checking
 echo("Total enclosure W:", total_w, "H:", total_h, "D:", total_d);
+echo("Inner cavity depth:", inner_depth);
+echo("Driver board hole positions (PCB-local):", board_hole_pts);
 
 // ─── Helper modules ───────────────────────────────────────
 
@@ -122,19 +136,18 @@ module back_cover() {
     }
 }
 
-// Driver board posts — assume 4 corners with hole_inset from each
+// Driver board posts at the 4 explicit hole positions
 module board_mount_posts() {
-    // Board placed in upper-right area (back view)
+    // Board placed in upper-right area (back view orientation)
     bx = total_w - side_wall - board_w - 10;  // 10mm from right edge
     by = side_wall + 5;                        // 5mm from top
     pillar_h = inner_depth - board_t;
-    for (cx = [board_hole_inset, board_w - board_hole_inset])
-    for (cy = [board_hole_inset, board_h - board_hole_inset])
-        translate([bx + cx, by + cy, 0])
+    for (pt = board_hole_pts)
+        translate([bx + pt[0], by + pt[1], 0])
             difference() {
-                cylinder(d=6, h=pillar_h, $fn=20);
+                cylinder(d=6, h=pillar_h, $fn=24);
                 translate([0, 0, pillar_h - 5])
-                    cylinder(d=board_hole_d, h=6, $fn=20);
+                    cylinder(d=board_hole_d, h=6, $fn=24);
             }
 }
 
@@ -169,74 +182,51 @@ module vesa_mount_inserts() {
             }
 }
 
-// ─── Desk stand (detachable A-frame) ──────────────────────
-
-module desk_stand() {
-    foot_w = 100;
-    foot_d = 80;
-    foot_t = 4;
-    tilt = 15;       // degrees backward
-    height = 30;
-
-    // Base
-    translate([0, 0, 0])
-        rounded_rect(foot_w, foot_d, 6, foot_t);
-    // Riser arm (single column tilted back, screws into VESA mounts)
-    translate([(foot_w - mount_spacing_x) / 2 - 5,
-               foot_d / 2 - 5,
-               foot_t])
-        rotate([tilt, 0, 0])
-            cube([mount_spacing_x + 10, 10, height]);
-    // Top mount plate with screw holes
-    translate([(foot_w - mount_spacing_x) / 2 - 5,
-               foot_d / 2,
-               foot_t + height])
-        difference() {
-            rotate([tilt, 0, 0])
-                cube([mount_spacing_x + 10,
-                      mount_spacing_y + 10,
-                      foot_t]);
-            // VESA pattern through holes
-            for (dx = [0, mount_spacing_x])
-            for (dy = [0, mount_spacing_y])
-                translate([dx + 5, dy + 5, -1])
-                    rotate([tilt, 0, 0])
-                        cylinder(d=mount_hole_d, h=10, $fn=20);
-        }
-}
-
-// ─── Wall mount plate ─────────────────────────────────────
+// ─── Wall mount plate (slim, hangs on a single wall screw) ──
 
 module wall_mount() {
     plate_w = mount_spacing_x + 40;
-    plate_h = mount_spacing_y + 60;
-    plate_t = 4;
+    plate_h = mount_spacing_y + 50;
+    plate_t = 5;            // a little thicker for keyhole strength
+    keyhole_d = 9;          // wall-screw head diameter
+    keyhole_slot_w = 4.5;   // wall-screw shaft slot width
+    keyhole_slot_h = 14;    // slot depth below the round hole
+
     difference() {
-        rounded_rect(plate_w, plate_h, 6, plate_t);
-        // Keyhole slot for hanging on wall screw
-        translate([plate_w / 2, plate_h - 12, -1]) {
-            cylinder(d=8, h=plate_t + 2, $fn=24);
-            translate([-2, 0, 0]) cube([4, 8, plate_t + 2]);
+        rounded_rect(plate_w, plate_h, 8, plate_t);
+
+        // Keyhole slot at top center (round hole + slot below for slide-down)
+        translate([plate_w / 2, plate_h - 14, -1]) {
+            cylinder(d=keyhole_d, h=plate_t + 2, $fn=32);
+            translate([-keyhole_slot_w/2, -keyhole_slot_h, 0])
+                cube([keyhole_slot_w, keyhole_slot_h, plate_t + 2]);
         }
-        // VESA screw holes
+
+        // Secondary screw hole at bottom center (anti-rotation pin)
+        translate([plate_w / 2, 10, -1])
+            cylinder(d=mount_hole_d, h=plate_t + 2, $fn=20);
+
+        // VESA pattern through-holes — countersunk
         for (dx = [-mount_spacing_x/2, mount_spacing_x/2])
         for (dy = [-mount_spacing_y/2, mount_spacing_y/2])
-            translate([plate_w/2 + dx, plate_h/2 - 5 + dy, -1])
-                cylinder(d=mount_hole_d, h=plate_t + 2, $fn=20);
+            translate([plate_w/2 + dx, plate_h/2 - 4 + dy, -1]) {
+                cylinder(d=mount_hole_d, h=plate_t + 2, $fn=24);
+                // Countersink the back side for flat-head screws
+                translate([0, 0, plate_t - 1.5])
+                    cylinder(d1=mount_hole_d, d2=6, h=2, $fn=24);
+            }
     }
 }
 
 // ─── Render selector ──────────────────────────────────────
 // Set `part` to render one of the parts at a time
 
-part = "front";  // "front" | "back" | "stand" | "wall" | "all"
+part = "front";  // "front" | "back" | "wall" | "all"
 
 if (part == "front")
     color("DimGray") front_frame();
 else if (part == "back")
     color("SlateGray") back_cover();
-else if (part == "stand")
-    color("Tan") desk_stand();
 else if (part == "wall")
     color("LightGray") wall_mount();
 else if (part == "all") {
@@ -244,7 +234,5 @@ else if (part == "all") {
     translate([0, 0, -back_wall - 1])
         color("SlateGray") back_cover();
     translate([total_w + 30, 0, 0])
-        color("Tan") desk_stand();
-    translate([total_w + 30, 100, 0])
         color("LightGray") wall_mount();
 }
