@@ -269,6 +269,8 @@ def collect():
         "moon_illumination": str(moon_illum),
         "milky_way_rating": mw_rating,
         "milky_way_note": mw_note,
+        "latitude": lat,
+        "longitude": lon,
     }
 
     return {

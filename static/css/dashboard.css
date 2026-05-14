@@ -671,9 +671,30 @@ body {
 .obs-rs-sun { color: var(--c-temp); }
 .obs-rs-moon { color: var(--c-moon); }
 
+/* Azimuth labels appended to moon phase row */
+.obs-az {
+    font-size: 14px;
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+    margin-left: 10px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.obs-az .obs-az-icon {
+    font-family: var(--f-sym);
+    font-size: 22px;
+    line-height: 1;
+}
+
+.obs-az.obs-az-moon { color: var(--c-moon); }
+.obs-az.obs-az-sun { color: var(--c-temp); }
+
 .obs-row .obs-icon {
     font-family: var(--f-sym);
-    font-size: 17px; width: 24px;
+    font-size: 22px; width: 28px;
     text-align: center; flex-shrink: 0;
     display: inline-flex; align-items: center; justify-content: center;
 }

@@ -7,7 +7,7 @@ xset -dpms
 xset s noblank
 
 # Set display rotation for ultra-wide bar screen
-xrandr --output HDMI-1 --mode 440x1920 --rotate right 2>/dev/null || true
+xrandr --output HDMI-1 --mode 440x1920 --rotate left 2>/dev/null || true
 
 # Hide cursor
 unclutter -idle 0.1 -root &

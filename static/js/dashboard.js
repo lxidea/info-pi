@@ -485,6 +485,67 @@ function parseTimeToMinutes(hhmm) {
     var p = hhmm.split(":"); return +p[0]*60 + +p[1];
 }
 
+// ── Solar and lunar position (SunCalc-style algorithm) ────
+// Returns azimuth (0-360° from north) and altitude (-90 to +90°)
+var _R = Math.PI / 180;
+var _OBLIQUITY = 23.4397 * _R;
+
+function _toDays(date) {
+    return date.valueOf() / 86400000 - 0.5 + 2440588 - 2451545;
+}
+function _rightAscension(l, b) {
+    return Math.atan2(Math.sin(l)*Math.cos(_OBLIQUITY) - Math.tan(b)*Math.sin(_OBLIQUITY), Math.cos(l));
+}
+function _declination(l, b) {
+    return Math.asin(Math.sin(b)*Math.cos(_OBLIQUITY) + Math.cos(b)*Math.sin(_OBLIQUITY)*Math.sin(l));
+}
+function _siderealTime(d, lw) {
+    return _R * (280.16 + 360.9856235 * d) - lw;
+}
+function _altitude(H, phi, dec) {
+    return Math.asin(Math.sin(phi)*Math.sin(dec) + Math.cos(phi)*Math.cos(dec)*Math.cos(H));
+}
+function _azimuthCalc(H, phi, dec) {
+    return Math.atan2(Math.sin(H), Math.cos(H)*Math.sin(phi) - Math.tan(dec)*Math.cos(phi));
+}
+
+function sunPosition(date, lat, lon) {
+    var lw = _R * -lon, phi = _R * lat;
+    var d = _toDays(date);
+    var M = _R * (357.5291 + 0.98560028 * d);
+    var C = _R * (1.9148*Math.sin(M) + 0.02*Math.sin(2*M) + 0.0003*Math.sin(3*M));
+    var L = M + C + _R * 102.9372 + Math.PI;
+    var dec = _declination(L, 0);
+    var ra = _rightAscension(L, 0);
+    var H = _siderealTime(d, lw) - ra;
+    var az = (_azimuthCalc(H, phi, dec) / _R + 180 + 360) % 360;
+    var alt = _altitude(H, phi, dec) / _R;
+    return { azimuth: az, altitude: alt };
+}
+
+function moonPosition(date, lat, lon) {
+    var lw = _R * -lon, phi = _R * lat;
+    var d = _toDays(date);
+    var L = _R * (218.316 + 13.176396 * d);
+    var M = _R * (134.963 + 13.064993 * d);
+    var F = _R * (93.272  + 13.229350 * d);
+    var l = L + _R * 6.289 * Math.sin(M);
+    var b = _R * 5.128 * Math.sin(F);
+    var dec = _declination(l, b);
+    var ra = _rightAscension(l, b);
+    var H = _siderealTime(d, lw) - ra;
+    var az = (_azimuthCalc(H, phi, dec) / _R + 180 + 360) % 360;
+    var alt = _altitude(H, phi, dec) / _R;
+    return { azimuth: az, altitude: alt };
+}
+
+// Map azimuth degrees to 8-direction Chinese cardinal
+function azimuthCardinal(deg) {
+    var dirs = ["北", "东北", "东", "东南", "南", "西南", "西", "西北"];
+    var idx = Math.round(deg / 45) % 8;
+    return dirs[idx];
+}
+
 // Compute body position on a celestial arc
 function arcPosition(rise, set, current) {
     if (rise === null || set === null) return null;
@@ -684,11 +745,23 @@ function updateAstronomy(weather, events) {
 
     var html = "";
 
-    // Moon phase row
+    // Moon phase row + sun & moon azimuth
+    var azHtml = "";
+    if (a.latitude !== undefined && a.longitude !== undefined) {
+        var nowDate = new Date();
+        var sp = sunPosition(nowDate, a.latitude, a.longitude);
+        var mp = moonPosition(nowDate, a.latitude, a.longitude);
+        var sunAz = Math.round(sp.azimuth);
+        var moonAz = Math.round(mp.azimuth);
+        azHtml = '<span class="obs-az obs-az-moon" title="月方位"><span class="obs-az-icon">☽</span>' + azimuthCardinal(moonAz) + ' ' + moonAz + '°</span>' +
+                 '<span class="obs-az obs-az-sun" title="日方位"><span class="obs-az-icon">☀</span>' + azimuthCardinal(sunAz) + ' ' + sunAz + '°</span>';
+    }
+
     html += '<div class="obs-row obs-moon">' +
         '<span class="obs-icon obs-moon-icon">' + svgMoonPhase(a.moon_phase_en, a.moon_illumination, 24) + '</span>' +
         '<span class="obs-label">月相</span>' +
         '<span class="obs-val">' + a.moon_phase + ' ' + a.moon_illumination + '%</span>' +
+        azHtml +
         '</div>';
 
     // Sun rise+set on one row, Moon rise+set on one row
