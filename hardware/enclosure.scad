@@ -32,24 +32,32 @@ board_h = 49;
 board_t = 4;
 board_hole_d = 3.0;   // M3 mounting holes
 
-// Explicit driver board hole positions (PCB local coordinates,
-// origin = top-left corner near USB connectors).
-// Top edge (near USB-C / HDMI) — holes have only 0.5mm edge clearance
-// to the top, so center y is 0.5 + (hole_d/2) = 2.
-// Asymmetric x: left hole 6.5mm edge distance, right hole 1mm.
-// Bottom 2 holes are 19mm from the same reference edge.
+// Driver board hole positions (PCB local coordinates).
+// Driver is mounted with LEFT short edge facing the cavity center
+// (where Mini-HDMI / USB-C ports are). PCB origin = top-left corner.
+//
+// !!! VERIFY THESE WITH ACTUAL CALIPER MEASUREMENT !!!
+// Current placeholder uses an approximately symmetric 4-corner pattern.
+// User's earlier measurement description was ambiguous — please measure:
+//   - distance from each hole's edge to nearest PCB edges
+//   - which holes are at which corners
+// then update this list.
+board_hole_inset_x = 3;     // typical edge inset for corner holes
+board_hole_inset_y = 3;
 board_hole_pts = [
-    [6.5 + board_hole_d/2,           0.5 + board_hole_d/2],          // TL (8.0,  2.0)
-    [board_w - 1.0 - board_hole_d/2, 0.5 + board_hole_d/2],          // TR (69.5, 2.0)
-    [6.5 + board_hole_d/2,           19.0 + board_hole_d/2],         // BL (8.0,  20.5)
-    [board_w - 1.0 - board_hole_d/2, 19.0 + board_hole_d/2],         // BR (69.5, 20.5)
+    [board_hole_inset_x,            board_hole_inset_y],            // TL
+    [board_w - board_hole_inset_x,  board_hole_inset_y],            // TR
+    [board_hole_inset_x,            board_h - board_hole_inset_y],  // BL
+    [board_w - board_hole_inset_x,  board_h - board_hole_inset_y],  // BR
 ];
 
-// Orange Pi Zero 2W
-pi_w = 65;
-pi_h = 30;
+// Orange Pi Zero 2W — mounted VERTICALLY in enclosure so HDMI port
+// (which sits on Pi's LONG edge) faces RIGHT toward driver board.
+pi_long = 65;        // long axis (will be vertical in enclosure)
+pi_short = 30;       // short axis (will be horizontal in enclosure)
 pi_t = 7;            // includes USB-C and HDMI port height
 pi_hole_d = 2.7;     // M2.5 self-tapping into post
+pi_hole_inset = 2.5; // typical inset from each corner
 
 // Enclosure margins
 side_margin = 7;    // horizontal padding inside enclosure
@@ -71,32 +79,36 @@ total_w = screen_w + 2 * (bezel_inset + side_wall);
 total_h = screen_h + 2 * (bezel_inset + side_wall);
 total_d = front_wall + inner_depth + back_wall;
 
-// ─── Internal layout map ──────────────────────────────────
+// ─── Internal layout map (CORRECTED) ──────────────────────
 //
 // Back view of cavity (looking at screen back from inside the case).
-// Pi on the LEFT, driver board on the RIGHT. Mini-HDMI to Mini-HDMI
-// short cable runs through the middle channel. External power exits
-// the bottom side wall.
 //
-// ┌────────────────────────────────────────────────────────┐ ← top
-// │  ┌──Pi──┐                              ┌──Driver──┐    │
-// │  │      │ ← mini-HDMI       HDMI in →  │  72×49   │    │
-// │  │ 65×30│ ←===== HDMI cable ========→  │          │    │
-// │  │      │ ← USB-C out                  │  FPC ↓   │    │
-// │  └──────┘                              └──────────┘    │
-// │     │                                       │          │
-// │     ▼ optional external power               ▼ FPC to   │
-// │  (run through bottom cable cutout)        screen edge  │
+// Driver board: 72×49mm, mounted HORIZONTALLY (long edge along screen).
+//   - LEFT short edge (49mm side):  Mini-HDMI (top), USB-C (bottom)
+//   - RIGHT short edge (49mm side): FPC ribbon → screen
+//   - TOP long edge (72mm side):    6-pin I2C touch connector
+//
+// Pi Zero 2W: 30×65mm, mounted VERTICALLY (long edge along Y axis).
+//   - RIGHT long edge (65mm side):  USB-C power, Mini-HDMI, USB-C OTG
+//   - This way the Mini-HDMI port faces RIGHT → toward driver board's
+//     LEFT short edge → ports face each other across the cavity!
+//
+// ┌───────────────────────┬┬───────────────────────────────┐ ← top wall
+// │                       ║║ ← optional touch FFC slot     │
+// │  ┌──Pi──┐             (aligned with driver's I2C edge) │
+// │  │ 30   │                                              │
+// │  │  ×   │                  ┌────Driver 72×49 ────┐     │
+// │  │  65  │   Mini-HDMI ←→   │ MHDMI                │     │
+// │  │      │   straight        │ USB-C    FPC →     │ → screen
+// │  │ HDMI│──── cable ────────│                     │  short edge
+// │  │ USB-C│                  └──────────────────────┘     │
+// │  │  out │                                              │
+// │  └──────┘                                              │
 // └─────────────────────┬┬─────────────────────────────────┘
-//                      bottom cable opening (36×9mm)
+//                      bottom: external Type-C power in
 //
-// Driver board orientation: USB-C / HDMI / I2C connectors face UPWARD
-// toward the top wall (since the 72mm long edge is horizontal here).
-// Pi's mini-HDMI should face RIGHT toward the driver board for the
-// shortest cable run.
-//
-// Touch FFC slot is on the RIGHT side wall, lined up with the driver
-// board's 6-pin I2C connector (CN3).
+// HDMI cable: straight Mini-HDMI cable, both plugs facing each other.
+// Cable runs horizontally across the cavity, in the PCB plane.
 
 // Mounting interface (VESA-style on back)
 mount_hole_d = 3.2;       // through-hole for M3
@@ -165,15 +177,22 @@ module front_frame() {
             rotate([45, 0, 0])
                 cube([cable_cut_w, 3, 3]);
 
-        // ── Touch FFC ribbon slot on the RIGHT side wall ──
+        // ── Touch FFC ribbon slot on the TOP side wall ──
+        // Aligned approximately above the driver board's I2C connector
+        // (which sits on the driver's TOP long edge). FFC ribbon routes
+        // upward and out through this slot to an external touch panel.
         if (enable_touch_slot) {
             slot_z_pos = front_wall + screen_t + back_clearance +
                          (max(board_t, pi_t) / 2) + touch_slot_z;
-            // Cut horizontally through right side wall
-            translate([total_w - side_wall - 1,
-                       (total_h - touch_slot_w) / 2,
+            // Approximate X position of driver board's I2C connector:
+            // upper-right area of the cavity, near board's top-left
+            bx_local = total_w - side_wall - board_w - 5;
+            i2c_x = bx_local + 10;   // ~10mm from driver's left edge
+            // Cut vertically through top side wall
+            translate([i2c_x,
+                       total_h - side_wall - 1,
                        slot_z_pos - touch_slot_h / 2])
-                cube([side_wall + 3, touch_slot_w, touch_slot_h]);
+                cube([touch_slot_w, side_wall + 3, touch_slot_h]);
         }
     }
 }
@@ -198,25 +217,19 @@ module back_cover() {
     }
 }
 
-// Driver board posts at the 4 explicit hole positions.
-// Position the board so the USB-C/HDMI edge (top of PCB locally,
-// y=0) faces DOWN in the enclosure cavity — this puts the HDMI plug
-// stub in the middle of the cavity where the cable can route to the
-// Pi via a right-angle (90°) HDMI cable.
+// Driver board posts at the 4 hole positions.
+// Driver board mounted in upper-RIGHT area, oriented with LEFT short
+// edge (USB-C/Mini-HDMI) facing the cavity CENTER (i.e., LEFT in
+// enclosure orientation). FPC connector on RIGHT short edge faces
+// outward toward screen's short edge.
 module board_mount_posts() {
-    // Inner cavity bounds: x in [side_wall, total_w - side_wall],
-    // y in [side_wall, total_h - side_wall]
-    // Driver board placed in upper-right area, with PCB y axis FLIPPED
-    // so USB-C side faces DOWN (toward middle of cavity).
-    bx = total_w - side_wall - board_w - 10;   // 10mm gap from right wall
-    by = side_wall + 4;                         // 4mm gap from top wall
-    // Flip PCB y so y=0 of PCB lands at the BOTTOM (facing cavity center)
+    // Driver board placement: long axis (72mm) horizontal,
+    // short axis (49mm) vertical. Position in upper-right of cavity.
+    bx = total_w - side_wall - board_w - 5;    // 5mm gap from right wall
+    by = (total_h - board_h) / 2;              // vertically centered
     pillar_h = inner_depth - board_t;
     for (pt = board_hole_pts) {
-        // pt[0] = PCB x (kept as-is), pt[1] = PCB y (flipped vertically)
-        px = bx + pt[0];
-        py = by + (board_h - pt[1]);
-        translate([px, py, 0])
+        translate([bx + pt[0], by + pt[1], 0])
             difference() {
                 cylinder(d=6, h=pillar_h, $fn=24);
                 translate([0, 0, pillar_h - 5])
@@ -225,16 +238,16 @@ module board_mount_posts() {
     }
 }
 
-// Pi posts — Pi placed on left side of cavity, vertically centered.
-// Orient Pi so its mini-HDMI port (on the short edge) faces RIGHT
-// toward the driver board for shortest cable path.
+// Pi posts — Pi placed on left side of cavity, mounted VERTICALLY
+// (long axis = 65mm along Y direction). HDMI port on Pi's RIGHT long
+// edge faces RIGHT toward the driver board's HDMI port.
 module pi_mount_posts() {
+    // Pi footprint in enclosure XY: pi_short(30) × pi_long(65)
     px = side_wall + 10;                       // 10mm gap from left wall
-    py = (total_h - pi_h) / 2;                 // vertically centered
+    py = (total_h - pi_long) / 2;              // vertically centered
     pillar_h = inner_depth - pi_t;
-    // Orange Pi Zero 2W mounting holes ~2.5mm from each corner edge
-    for (cx = [2.5, pi_w - 2.5])
-    for (cy = [2.5, pi_h - 2.5])
+    for (cx = [pi_hole_inset, pi_short - pi_hole_inset])
+    for (cy = [pi_hole_inset, pi_long - pi_hole_inset])
         translate([px + cx, py + cy, 0])
             difference() {
                 cylinder(d=5, h=pillar_h, $fn=20);
