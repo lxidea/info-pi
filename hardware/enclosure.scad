@@ -32,23 +32,22 @@ board_h = 49;
 board_t = 4;
 board_hole_d = 3.0;   // M3 mounting holes
 
-// Driver board hole positions (PCB local coordinates).
-// Driver is mounted with LEFT short edge facing the cavity center
-// (where Mini-HDMI / USB-C ports are). PCB origin = top-left corner.
+// Driver board hole positions (PCB local coordinates, origin = top-
+// left corner with USB-C/HDMI on the left short edge).
 //
-// !!! VERIFY THESE WITH ACTUAL CALIPER MEASUREMENT !!!
-// Current placeholder uses an approximately symmetric 4-corner pattern.
-// User's earlier measurement description was ambiguous — please measure:
-//   - distance from each hole's edge to nearest PCB edges
-//   - which holes are at which corners
-// then update this list.
-board_hole_inset_x = 3;     // typical edge inset for corner holes
-board_hole_inset_y = 3;
+// Measured hole EDGE distances:
+//   - Left short edge: 0.5mm  → center x = 0.5 + 1.5 = 2.0
+//   - Right short edge: 19mm  → center x = 72 - 19 - 1.5 = 51.5
+//   - Top long edge: 7mm      → center y = 7 + 1.5 = 8.5
+//   - Bottom long edge: 1mm   → center y = 49 - 1 - 1.5 = 46.5
+//
+// Holes form a 49.5 × 38mm rectangle on the PCB. The asymmetric right
+// margin (20mm) is where the FPC connector lives.
 board_hole_pts = [
-    [board_hole_inset_x,            board_hole_inset_y],            // TL
-    [board_w - board_hole_inset_x,  board_hole_inset_y],            // TR
-    [board_hole_inset_x,            board_h - board_hole_inset_y],  // BL
-    [board_w - board_hole_inset_x,  board_h - board_hole_inset_y],  // BR
+    [2.0,  8.5],    // TL — near Mini-HDMI
+    [51.5, 8.5],    // TR — near top, far from connectors
+    [2.0,  46.5],   // BL — near USB-C
+    [51.5, 46.5],   // BR — near FPC connector
 ];
 
 // Orange Pi Zero 2W — mounted VERTICALLY in enclosure so HDMI port
