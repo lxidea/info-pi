@@ -56,9 +56,10 @@ side_margin = 7;    // horizontal padding inside enclosure
 top_margin = 7;     // vertical padding
 back_clearance = 3; // air gap between screen back and tallest component
 
-// Extra Z-clearance for the internal HDMI / mini-HDMI cable plugs.
-// HDMI connector body protrudes ~6mm above PCB. We need enough room
-// in the cavity to insert the cable without straining the connector.
+// Extra Z-clearance for the internal cable plugs.
+// Both Pi and driver board use Mini-HDMI female ports. A Mini-HDMI
+// plug body is ~17×9×6mm — fits within the existing pi_t/board_t
+// envelope but we add a small margin so the connector seats fully.
 hdmi_plug_clearance = 2;  // extra mm on top of pi_t / board_t
 
 // Outer shell
@@ -73,8 +74,9 @@ total_d = front_wall + inner_depth + back_wall;
 // ─── Internal layout map ──────────────────────────────────
 //
 // Back view of cavity (looking at screen back from inside the case).
-// Pi on the LEFT, driver board on the RIGHT. HDMI cable runs through
-// the middle channel. External power exits the bottom side wall.
+// Pi on the LEFT, driver board on the RIGHT. Mini-HDMI to Mini-HDMI
+// short cable runs through the middle channel. External power exits
+// the bottom side wall.
 //
 // ┌────────────────────────────────────────────────────────┐ ← top
 // │  ┌──Pi──┐                              ┌──Driver──┐    │
