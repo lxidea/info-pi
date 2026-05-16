@@ -122,12 +122,22 @@ cable_cut_w = 36;     // wide enough for Type-C + room for cable bend
 cable_cut_h = 9;      // tall enough for Type-C connector body
 cable_cut_offset = 0; // 0 = centered along bottom edge; +N moves right
 
-// Touch panel FFC ribbon slot (right side wall, near driver board's
+// Touch panel FFC ribbon slot (top side wall, near driver board's
 // I2C connector). Small flat slot for a future 6-pin touch ribbon.
 touch_slot_w = 8;     // ribbon width + margin
 touch_slot_h = 1.5;   // ribbon thickness + margin
 touch_slot_z = 0;     // vertical center along the inner cavity (0 = mid)
 enable_touch_slot = true;
+
+// microSD card protrusion slot
+// When SD card is inserted into Pi's slot, the card body protrudes
+// ~8-10mm beyond Pi's short edge. We need a slot through the
+// enclosure wall to accommodate this protrusion (and bonus: enables
+// SD card swap without opening the case).
+sd_slot_w = 13;       // microSD width 11mm + 2mm margin
+sd_slot_h = 2.5;      // microSD thickness 1mm + slot housing
+sd_slot_side = "bottom";   // "top" or "bottom" — which wall has the slot
+enable_sd_slot = true;
 
 // Echo computed sizes — useful for sanity checking
 echo("Total enclosure W:", total_w, "H:", total_h, "D:", total_d);
@@ -192,6 +202,28 @@ module front_frame() {
                        total_h - side_wall - 1,
                        slot_z_pos - touch_slot_h / 2])
                 cube([touch_slot_w, side_wall + 3, touch_slot_h]);
+        }
+
+        // ── microSD card protrusion slot ──
+        // Cuts through the top or bottom side wall aligned with Pi's
+        // short edge. Pi is mounted vertically, so SD card protrudes
+        // out through the top or bottom (depending on Pi's mounting
+        // orientation set via sd_slot_side).
+        if (enable_sd_slot) {
+            sd_z_pos = front_wall + screen_t + back_clearance +
+                       (pi_t / 2);
+            // Pi placement: px = side_wall + 10, pi_short = 30
+            // Center the slot on Pi's short axis (X-centered on Pi)
+            sd_x = side_wall + 10 + (pi_short - sd_slot_w) / 2;
+            if (sd_slot_side == "bottom") {
+                translate([sd_x, -1, sd_z_pos - sd_slot_h / 2])
+                    cube([sd_slot_w, side_wall + 3, sd_slot_h]);
+            } else {
+                // top
+                translate([sd_x, total_h - side_wall - 1,
+                           sd_z_pos - sd_slot_h / 2])
+                    cube([sd_slot_w, side_wall + 3, sd_slot_h]);
+            }
         }
     }
 }
