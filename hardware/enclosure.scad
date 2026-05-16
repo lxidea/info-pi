@@ -130,13 +130,16 @@ touch_slot_z = 0;     // vertical center along the inner cavity (0 = mid)
 enable_touch_slot = true;
 
 // microSD card protrusion slot
-// When SD card is inserted into Pi's slot, the card body protrudes
-// ~8-10mm beyond Pi's short edge. We need a slot through the
-// enclosure wall to accommodate this protrusion (and bonus: enables
-// SD card swap without opening the case).
+// Pi is mounted VERTICALLY (long axis vertical), connector edge on
+// its RIGHT long edge faces the driver. The microSD card slot is on
+// Pi's TOP short edge and the card protrudes 4mm upward when inserted.
+// We need a 13×2.5mm slot in the TOP wall of the enclosure so the
+// card extends through and remains user-swappable from outside.
 sd_slot_w = 13;       // microSD width 11mm + 2mm margin
 sd_slot_h = 2.5;      // microSD thickness 1mm + slot housing
-sd_slot_side = "bottom";   // "top" or "bottom" — which wall has the slot
+sd_slot_side = "top";      // "top" or "bottom"
+sd_slot_offset_x = 0;      // optional x adjustment if Pi's SD slot
+                            // isn't centered on the short edge
 enable_sd_slot = true;
 
 // Echo computed sizes — useful for sanity checking
@@ -213,8 +216,10 @@ module front_frame() {
             sd_z_pos = front_wall + screen_t + back_clearance +
                        (pi_t / 2);
             // Pi placement: px = side_wall + 10, pi_short = 30
-            // Center the slot on Pi's short axis (X-centered on Pi)
-            sd_x = side_wall + 10 + (pi_short - sd_slot_w) / 2;
+            // Default: center the slot on Pi's short axis.
+            // Use sd_slot_offset_x to bias toward one end if Pi's actual
+            // SD slot isn't centered on its short edge.
+            sd_x = side_wall + 10 + (pi_short - sd_slot_w) / 2 + sd_slot_offset_x;
             if (sd_slot_side == "bottom") {
                 translate([sd_x, -1, sd_z_pos - sd_slot_h / 2])
                     cube([sd_slot_w, side_wall + 3, sd_slot_h]);
@@ -271,11 +276,15 @@ module board_mount_posts() {
 
 // Pi posts — Pi placed on left side of cavity, mounted VERTICALLY
 // (long axis = 65mm along Y direction). HDMI port on Pi's RIGHT long
-// edge faces RIGHT toward the driver board's HDMI port.
+// edge faces RIGHT toward the driver board's HDMI port. SD card on
+// Pi's TOP short edge protrudes 4mm UP through the top-wall slot.
 module pi_mount_posts() {
     // Pi footprint in enclosure XY: pi_short(30) × pi_long(65)
+    // Position Pi flush to top so SD card aligns with the top-wall slot.
     px = side_wall + 10;                       // 10mm gap from left wall
-    py = (total_h - pi_long) / 2;              // vertically centered
+    py = side_wall + (total_h - 2*side_wall - pi_long) - 2;
+    // ↑ Pi's TOP edge sits ~2mm below the inside surface of the top
+    //   wall, leaving just enough for SD card to clear and exit.
     pillar_h = inner_depth - pi_t;
     for (cx = [pi_hole_inset, pi_short - pi_hole_inset])
     for (cy = [pi_hole_inset, pi_long - pi_hole_inset])
