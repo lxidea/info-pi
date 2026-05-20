@@ -135,11 +135,13 @@ enable_touch_slot = true;
 // Pi's TOP short edge and the card protrudes 4mm upward when inserted.
 // We need a 13×2.5mm slot in the TOP wall of the enclosure so the
 // card extends through and remains user-swappable from outside.
+// Measured: Pi's SD slot is 11mm wide, slot right edge is 7.5mm from
+// Pi's right edge. So slot center is 7.5 + 11/2 = 13mm from Pi right
+// edge, which is 2mm right of Pi center (Pi center = 15mm from right).
 sd_slot_w = 13;       // microSD width 11mm + 2mm margin
 sd_slot_h = 2.5;      // microSD thickness 1mm + slot housing
 sd_slot_side = "top";      // "top" or "bottom"
-sd_slot_offset_x = 0;      // optional x adjustment if Pi's SD slot
-                            // isn't centered on the short edge
+sd_slot_offset_x = 2;      // SD slot center is 2mm right of Pi center
 enable_sd_slot = true;
 
 // Echo computed sizes — useful for sanity checking
