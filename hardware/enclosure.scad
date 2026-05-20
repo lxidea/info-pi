@@ -78,36 +78,43 @@ total_w = screen_w + 2 * (bezel_inset + side_wall);
 total_h = screen_h + 2 * (bezel_inset + side_wall);
 total_d = front_wall + inner_depth + back_wall;
 
-// ─── Internal layout map (CORRECTED) ──────────────────────
+// ─── Internal layout map (FINAL) ──────────────────────────
 //
 // Back view of cavity (looking at screen back from inside the case).
 //
-// Driver board: 72×49mm, mounted HORIZONTALLY (long edge along screen).
-//   - LEFT short edge (49mm side):  Mini-HDMI (top), USB-C (bottom)
-//   - RIGHT short edge (49mm side): FPC ribbon → screen
-//   - TOP long edge (72mm side):    6-pin I2C touch connector
+// Pi Zero 2W: native 65×30mm, mounted VERTICALLY in enclosure after a
+// 90° CW rotation. After rotation:
+//   - Right long edge (vertical, 65mm): USB-C, USB-C, Mini-HDMI (top→bot)
+//   - Bottom short edge (horizontal, 30mm): microSD slot (card down 4mm)
+//   - Top short edge: aux FFC ribbon (camera connector)
+//   - Left long edge: 40-pin GPIO header
 //
-// Pi Zero 2W: 30×65mm, mounted VERTICALLY (long edge along Y axis).
-//   - RIGHT long edge (65mm side):  USB-C power, Mini-HDMI, USB-C OTG
-//   - This way the Mini-HDMI port faces RIGHT → toward driver board's
-//     LEFT short edge → ports face each other across the cavity!
+// Driver board: 72×49mm, mounted HORIZONTALLY at right side of cavity.
+//   - Left short edge (49mm): Mini-HDMI (top), USB-C (bottom)
+//   - Right short edge: FPC ribbon → screen
+//   - Top long edge: 6-pin I2C touch connector
 //
-// ┌───────────────────────┬┬───────────────────────────────┐ ← top wall
-// │                       ║║ ← optional touch FFC slot     │
-// │  ┌──Pi──┐             (aligned with driver's I2C edge) │
-// │  │ 30   │                                              │
-// │  │  ×   │                  ┌────Driver 72×49 ────┐     │
-// │  │  65  │   Mini-HDMI ←→   │ MHDMI                │     │
-// │  │      │   straight        │ USB-C    FPC →     │ → screen
-// │  │ HDMI│──── cable ────────│                     │  short edge
-// │  │ USB-C│                  └──────────────────────┘     │
-// │  │  out │                                              │
-// │  └──────┘                                              │
-// └─────────────────────┬┬─────────────────────────────────┘
-//                      bottom: external Type-C power in
+// ┌────────────────────┬┬─────────────────────────────────────────┐ top
+// │      aux-FFC ───→ ║║      touch-FFC ───→ ║║                   │
+// │  ┌────────┐                                                    │
+// │  │  Pi    │ ←USB-C                                             │
+// │  │ 30×65  │ ←USB-C                                             │
+// │  │ vertical│ ←HDMI  →─ short straight cable ─→ HDMI            │
+// │  │        │                              ┌──Driver 72×49───┐  │
+// │  │        │                              │ USB-C/HDMI ←    │  │
+// │  │        │                              │                FPC├─→
+// │  │  GPIO← │                              │                  │  │
+// │  └────────┘                              └──────────────────┘  │
+// │     ║║                                                         │
+// │   SD slot (bottom wall, card drops 4mm)                        │
+// └─────────────────────┬┬─────────────────────────────────────────┘
+//                  external Type-C power
 //
-// HDMI cable: straight Mini-HDMI cable, both plugs facing each other.
-// Cable runs horizontally across the cavity, in the PCB plane.
+// HDMI cable: short straight Mini-HDMI cable. Both plugs face each
+// other across the cavity center.
+//
+// Note: Pi's HDMI is at the BOTTOM of its right long edge (after CW
+// rotation), so cable terminates near the lower portion of cavity.
 
 // Mounting interface (VESA-style on back)
 mount_hole_d = 3.2;       // through-hole for M3
@@ -130,18 +137,26 @@ touch_slot_z = 0;     // vertical center along the inner cavity (0 = mid)
 enable_touch_slot = true;
 
 // microSD card protrusion slot
-// Pi is mounted VERTICALLY (long axis vertical), connector edge on
-// its RIGHT long edge faces the driver. The microSD card slot is on
-// Pi's TOP short edge and the card protrudes 4mm upward when inserted.
-// We need a 13×2.5mm slot in the TOP wall of the enclosure so the
-// card extends through and remains user-swappable from outside.
-// Measured: Pi's SD slot is 11mm wide, slot right edge is 7.5mm from
-// Pi's right edge. So slot center is 7.5 + 11/2 = 13mm from Pi right
-// edge, which is 2mm right of Pi center (Pi center = 15mm from right).
-sd_slot_w = 13;       // microSD width 11mm + 2mm margin
-sd_slot_h = 2.5;      // microSD thickness 1mm + slot housing
-sd_slot_side = "top";      // "top" or "bottom"
-sd_slot_offset_x = 2;      // SD slot center is 2mm right of Pi center
+// Pi is mounted VERTICALLY (long axis vertical) after a 90° CW
+// rotation from its native landscape layout. In native orientation:
+//   Top long edge (65mm):  USB-C, USB-C, Mini-HDMI (left → right)
+//   Right short edge (30mm): microSD slot
+//   Bottom long edge: 40-pin GPIO
+//   Left short edge: aux FFC ribbon (camera connector)
+// After CW rotation, in our enclosure:
+//   Right long edge: USB-C, USB-C, Mini-HDMI (top → bottom)
+//   Bottom short edge: microSD slot — card protrudes DOWNWARD 4mm
+//   Top short edge: aux FFC connector
+//   Left long edge: GPIO header
+//
+// SD card slot dimensions (measured on board):
+//   Slot is 11mm wide, slot right edge is 7.5mm from Pi's far edge.
+//   So slot center is 17mm from Pi's near edge, i.e., 2mm offset
+//   from Pi's centerline.
+sd_slot_w = 13;            // SD card 11mm + 2mm margin
+sd_slot_h = 2.5;           // SD card 1mm + slot housing margin
+sd_slot_side = "bottom";   // protrudes through BOTTOM wall
+sd_slot_offset_x = 2;      // 2mm right of Pi center
 enable_sd_slot = true;
 
 // Echo computed sizes — useful for sanity checking
@@ -277,16 +292,15 @@ module board_mount_posts() {
 }
 
 // Pi posts — Pi placed on left side of cavity, mounted VERTICALLY
-// (long axis = 65mm along Y direction). HDMI port on Pi's RIGHT long
-// edge faces RIGHT toward the driver board's HDMI port. SD card on
-// Pi's TOP short edge protrudes 4mm UP through the top-wall slot.
+// after a 90° CW rotation from native. HDMI port at the BOTTOM of
+// Pi's RIGHT long edge faces RIGHT toward driver. SD card on Pi's
+// BOTTOM short edge protrudes 4mm DOWN through bottom-wall slot.
 module pi_mount_posts() {
-    // Pi footprint in enclosure XY: pi_short(30) × pi_long(65)
-    // Position Pi flush to top so SD card aligns with the top-wall slot.
+    // Position Pi flush to bottom so SD card aligns with bottom slot.
+    // Pi's BOTTOM edge sits 1mm above the inside surface of bottom
+    // wall, so SD card sticks ~1mm beyond outside of bottom wall.
     px = side_wall + 10;                       // 10mm gap from left wall
-    py = side_wall + (total_h - 2*side_wall - pi_long) - 2;
-    // ↑ Pi's TOP edge sits ~2mm below the inside surface of the top
-    //   wall, leaving just enough for SD card to clear and exit.
+    py = side_wall + 1;                         // 1mm gap from bottom inside
     pillar_h = inner_depth - pi_t;
     for (cx = [pi_hole_inset, pi_short - pi_hole_inset])
     for (cy = [pi_hole_inset, pi_long - pi_hole_inset])
