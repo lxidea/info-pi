@@ -80,35 +80,40 @@ total_d = front_wall + inner_depth + back_wall;
 
 // ─── Internal layout map (FINAL) ──────────────────────────
 //
-// Back view of cavity (looking at screen back from inside the case).
+// All SCAD coordinates use the BACK VIEW (looking at the screen back
+// from inside the cavity). User-facing descriptions may use FRONT
+// VIEW (mirrored): "left from front" = "right from back" and vice
+// versa. Top/bottom are the same in both views.
 //
 // Pi Zero 2W: native 65×30mm, mounted VERTICALLY in enclosure after a
-// 90° CW rotation. After rotation:
-//   - Right long edge (vertical, 65mm): USB-C, USB-C, Mini-HDMI (top→bot)
-//   - Bottom short edge (horizontal, 30mm): microSD slot (card down 4mm)
-//   - Top short edge: aux FFC ribbon (camera connector)
-//   - Left long edge: 40-pin GPIO header
+// 90° CW rotation from its native landscape layout.
+//   Native top long edge → enclosure RIGHT long edge:
+//                            USB-C, USB-C, Mini-HDMI (top → bottom)
+//   Native right short edge → enclosure BOTTOM short edge: microSD
+//   Native left short edge  → enclosure TOP short edge: aux FFC
+//   Native bottom long edge → enclosure LEFT long edge: 40-pin GPIO
 //
-// Driver board: 72×49mm, mounted HORIZONTALLY at right side of cavity.
-//   - Left short edge (49mm): Mini-HDMI (top), USB-C (bottom)
-//   - Right short edge: FPC ribbon → screen
-//   - Top long edge: 6-pin I2C touch connector
+// Driver board: 72×49mm, mounted HORIZONTALLY at RIGHT side of cavity
+// (back view). Equivalently, on the LEFT side when viewed from front
+// through the screen.
+//   Left short edge (49mm side): Mini-HDMI (top), USB-C (bottom)
+//   Right short edge:            FPC ribbon → screen
+//   Top long edge (72mm side):   6-pin I2C touch connector
 //
 // ┌────────────────────┬┬─────────────────────────────────────────┐ top
-// │      aux-FFC ───→ ║║      touch-FFC ───→ ║║                   │
+// │      aux-FFC ──→ ║║          touch-FFC ──→ ║║                 │
 // │  ┌────────┐                                                    │
 // │  │  Pi    │ ←USB-C                                             │
-// │  │ 30×65  │ ←USB-C                                             │
-// │  │ vertical│ ←HDMI  →─ short straight cable ─→ HDMI            │
-// │  │        │                              ┌──Driver 72×49───┐  │
-// │  │        │                              │ USB-C/HDMI ←    │  │
-// │  │        │                              │                FPC├─→
-// │  │  GPIO← │                              │                  │  │
-// │  └────────┘                              └──────────────────┘  │
-// │     ║║                                                         │
-// │   SD slot (bottom wall, card drops 4mm)                        │
+// │  │ 30×65  │ ←USB-C        ┌─ Driver 72×49 ──┐                  │
+// │  │ vert.  │ ←HDMI ── short straight cable ─→ HDMI               │
+// │  │ (CW)   │               │  USB-C/HDMI ←  │                  │
+// │  │        │               │                FPC├─→ screen edge │
+// │  │ GPIO ← │               │                 │                  │
+// │  └────────┘               └─────────────────┘                  │
+// │     ║║                                                          │
+// │   SD slot (bottom wall, card drops 4mm)                         │
 // └─────────────────────┬┬─────────────────────────────────────────┘
-//                  external Type-C power
+//                  external Type-C power (bottom wall, centered)
 //
 // HDMI cable: short straight Mini-HDMI cable. Both plugs face each
 // other across the cavity center.
