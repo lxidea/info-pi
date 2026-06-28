@@ -594,27 +594,46 @@ function updateSkyArc(astro) {
     // Returns SVG path string + position of body on arc at currentMin
     function buildArc(rise, set, current, peakHeight, cssClass, overflowOffset) {
         if (rise === null || set === null) return { path: "", body: null };
-        // Determine arc segments. May cross midnight.
-        var segments = []; // array of {start_min, end_min}
-        if (set > rise) {
-            segments.push({s: rise, e: set});
-        } else {
-            // crosses midnight: rise..1440 and 0..set
-            segments.push({s: rise, e: 1440});
-            segments.push({s: 0, e: set});
-        }
 
-        // Build closed paths for filled arcs (each segment is its own arc shape).
-        // Path: M rise,horizon Q peak peak set,horizon L set,horizon Z (closed at horizon)
+        // Build the arc as ONE continuous quadratic curve representing the
+        // body's full path from rise to set, even when crossing midnight.
+        // For midnight-crossing cases, we render the arc extended beyond
+        // the visible timeline (to the right past the panel, and to the
+        // left before the panel). SVG clip-path then crops to the visible
+        // [0, 1440] area so we only see the correct portion of the arc.
         var pathStr = "";
-        segments.forEach(function(seg) {
-            var sx = timeToX(seg.s);
-            var ex = timeToX(seg.e);
+        var dx = x2 - x1;  // pixel width of full 24h timeline
+
+        if (set > rise) {
+            // Single arc, same day
+            var sx = timeToX(rise);
+            var ex = timeToX(set);
             var midX = (sx + ex) / 2;
             var peakY = hY - peakHeight;
-            // Closed shape: arc curve from rise to set, then straight line back along horizon
-            pathStr += 'M ' + sx + ',' + hY + ' Q ' + midX + ',' + peakY + ' ' + ex + ',' + hY + ' Z ';
-        });
+            pathStr = 'M ' + sx + ',' + hY +
+                      ' Q ' + midX + ',' + peakY +
+                      ' ' + ex + ',' + hY + ' Z ';
+        } else {
+            // Crosses midnight: draw TWO instances of the same full arc,
+            // one extending past the right edge and one before the left.
+            // Clip-path will limit them to the visible panel area.
+            //
+            // Instance A: rise (today) → set + 1440 (effectively past right)
+            var sxA = timeToX(rise);
+            var exA = timeToX(set) + dx;
+            var midXA = (sxA + exA) / 2;
+            // Instance B: rise - 1440 (effectively before left) → set (today)
+            var sxB = timeToX(rise) - dx;
+            var exB = timeToX(set);
+            var midXB = (sxB + exB) / 2;
+            var peakY = hY - peakHeight;
+            pathStr = 'M ' + sxA + ',' + hY +
+                      ' Q ' + midXA + ',' + peakY +
+                      ' ' + exA + ',' + hY + ' Z ' +
+                      'M ' + sxB + ',' + hY +
+                      ' Q ' + midXB + ',' + peakY +
+                      ' ' + exB + ',' + hY + ' Z ';
+        }
 
         // Compute body position based on current time
         var body = null;
@@ -660,6 +679,10 @@ function updateSkyArc(astro) {
             '<feGaussianBlur stdDeviation="1.5" result="blur"/>' +
             '<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>' +
         '</filter>' +
+        // Clip path: limit arc rendering to the visible timeline area only
+        '<clipPath id="skyClip">' +
+            '<rect x="' + (x1 - 4) + '" y="0" width="' + (x2 - x1 + 8) + '" height="' + hY + '"/>' +
+        '</clipPath>' +
         '</defs>';
 
     // Hour grid markers (every 6 hours: 00, 06, 12, 18, 24)
@@ -669,6 +692,10 @@ function updateSkyArc(astro) {
         s += '<text class="sky-hour" x="'+hX+'" y="'+(hY+22)+'" text-anchor="middle">'+(h<10?'0'+h:h)+':00</text>';
     });
 
+    // Arc paths wrapped in clip group so wrap-around portions outside
+    // the visible timeline don't draw fake midnight peaks.
+    s += '<g clip-path="url(#skyClip)">';
+
     // Moon arc (drawn first so sun is on top)
     if (moon.path) {
         s += '<path class="moon-arc" d="'+moon.path+'"/>';
@@ -676,6 +703,8 @@ function updateSkyArc(astro) {
 
     // Sun arc
     s += '<path class="arc-path" d="'+sun.path+'"/>';
+
+    s += '</g>';  // end clip group
 
     // Horizon line
     s += '<line class="horizon-line" x1="'+(pad-8)+'" y1="'+hY+'" x2="'+(W-pad+8)+'" y2="'+hY+'"/>';
