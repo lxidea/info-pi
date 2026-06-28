@@ -741,9 +741,16 @@ body {
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
+.obs-row.obs-event .obs-date {
+    color: var(--c-dim); font-family: var(--f-mono);
+    font-size: 14px; font-variant-numeric: tabular-nums;
+    flex-shrink: 0; margin: 0 8px;
+}
+
 .obs-row.obs-event .obs-cd {
     color: var(--c-time); font-weight: 600;
     font-family: var(--f-mono); font-size: 15px;
+    flex-shrink: 0;
 }
 
 /* Environment pills */

@@ -827,13 +827,14 @@ function updateAstronomy(weather, events) {
         a.milky_way_rating + '</span> · ' + a.milky_way_note + '</span>' +
         '</div>';
 
-    // Events
-    (events || []).slice(0,1).forEach(function(ev) {
+    // Upcoming astronomy events (up to 3), each with its calendar date
+    (events || []).slice(0,3).forEach(function(ev) {
         var cd = ev.days_away===0 ? "今天" : ev.days_away + "天";
         var ic = ev.type==="eclipse" ? "●" : "★";
         html += '<div class="obs-row obs-event">' +
             '<span class="obs-icon">' + ic + '</span>' +
             '<span class="obs-val">' + ev.name + '</span>' +
+            '<span class="obs-date">' + ev.date + '</span>' +
             '<span class="obs-cd">' + cd + '</span>' +
             '</div>';
     });
