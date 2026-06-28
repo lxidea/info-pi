@@ -23,7 +23,12 @@ def _weather_loop():
         if result is not None:
             with _lock:
                 _data["weather"] = result
-        time.sleep(config.WEATHER_INTERVAL)
+            time.sleep(config.WEATHER_INTERVAL)
+        else:
+            # Transient fetch failure (the Pi's link is flaky). Retry soon
+            # instead of leaving the dashboard blank for a whole interval —
+            # otherwise one failed fetch at startup blanks weather for 15 min.
+            time.sleep(30)
 
 
 def _start_collectors():

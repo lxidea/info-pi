@@ -104,25 +104,50 @@ def _moon_rise_set(phase_frac, sunrise_str, sunset_str):
     return _format_time(moonrise), _format_time(moonset)
 
 
-def _milky_way(moon_illum, month):
-    """Return (rating, note) for Milky Way visibility."""
-    core_season = 4 <= month <= 9
+# Rating ladder, worst \u2192 best (must match MW_CLASS keys in dashboard.js)
+_MW_LADDER = ["\u8f83\u5dee", "\u4e00\u822c", "\u826f\u597d", "\u6781\u4f73"]
 
+
+def _milky_way(moon_illum, month, cloud_cover=0, weather_code=-1):
+    """Return (rating, note) for Milky Way visibility.
+
+    Combines three factors, in order of how decisively each kills visibility:
+      1. Sky obstruction \u2014 precipitation / fog / heavy cloud block the sky
+         entirely, no matter how dark the night is.
+      2. Moonlight \u2014 a bright moon washes out the faint galactic band.
+      3. Galactic-core season \u2014 the bright core is only up Apr\u2013Sep here.
+    """
+    core_season = 4 <= month <= 9
+    cc = int(cloud_cover or 0)
+
+    # 1) Sky blocked outright \u2014 rain/snow/fog/thunderstorm, or thick cloud.
+    if weather_code >= 45:                       # 45+ = fog / drizzle / rain / snow / storm
+        return "\u8f83\u5dee", "\u9634\u96e8\u6216\u96fe\uff0c\u5929\u7a7a\u906e\u6321"   # overcast rain/fog, sky blocked
+    if cc >= 70 or weather_code == 3:            # 3 = overcast
+        return "\u8f83\u5dee", "\u4e91\u91cf{}%\uff0c\u4e91\u5c42\u8fc7\u539a".format(cc)  # cloud NN%, too thick
+
+    # 2) Base score from moonlight + whether the core is even up this season.
     if moon_illum > 75:
-        # \u6708\u5149\u8fc7\u5f3a = moonlight too bright
-        return "\u8f83\u5dee", "\u6708\u5149\u8fc7\u5f3a"
-    if moon_illum > 50:
-        if core_season:
-            return "\u4e00\u822c", "\u6838\u5fc3\u53ef\u89c1\uff0c\u6708\u5149\u5e72\u6270"
-        return "\u8f83\u5dee", "\u6838\u5fc3\u4e0d\u53ef\u89c1"
-    if moon_illum > 25:
-        if core_season:
-            return "\u826f\u597d", "\u6838\u5fc3\u53ef\u89c1\uff0c\u6708\u5149\u8f83\u5f31"
-        return "\u4e00\u822c", "\u6838\u5fc3\u4e0d\u53ef\u89c1"
-    # moon_illum <= 25
-    if core_season:
-        return "\u6781\u4f73", "\u6838\u5fc3\u53ef\u89c1\uff0c\u6708\u5149\u5fae\u5f31"
-    return "\u826f\u597d", "\u6838\u5fc3\u4e0d\u53ef\u89c1\uff0c\u6697\u591c"
+        score, mnote = 0, "\u6708\u5149\u8fc7\u5f3a"                       # moon too bright
+    elif moon_illum > 50:
+        score, mnote = (1 if core_season else 0), "\u6708\u5149\u5e72\u6270"   # moonlight interferes
+    elif moon_illum > 25:
+        score, mnote = (2 if core_season else 1), "\u6708\u5149\u8f83\u5f31"   # moonlight weak
+    else:
+        score, mnote = (3 if core_season else 2), "\u6708\u5149\u5fae\u5f31"   # moonlight faint
+
+    # 3) Partial-cloud penalty on an otherwise clear, dark sky.
+    if cc >= 40:
+        score = max(0, score - 2)
+        cnote = "\u4e91\u91cf{}%".format(cc)        # cloud NN%
+    elif cc >= 20:
+        score = max(0, score - 1)
+        cnote = "\u5c11\u91cf\u4e91"                  # some cloud
+    else:
+        cnote = "\u6674\u6717"                        # clear
+
+    core_note = "\u6838\u5fc3\u53ef\u89c1" if core_season else "\u6838\u5fc3\u4e0d\u53ef\u89c1"  # core (in)visible
+    return _MW_LADDER[score], "{}\uff0c{}\uff0c{}".format(core_note, cnote, mnote)
 
 
 def _aqi_level(aqi):
@@ -147,7 +172,7 @@ def collect():
         "https://api.open-meteo.com/v1/forecast"
         "?latitude={lat}&longitude={lon}"
         "&current=temperature_2m,relative_humidity_2m,apparent_temperature,"
-        "weather_code,wind_speed_10m,wind_direction_10m"
+        "weather_code,cloud_cover,wind_speed_10m,wind_direction_10m"
         "&hourly=temperature_2m,weather_code"
         "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,"
         "wind_speed_10m_max,wind_direction_10m_dominant"
@@ -208,6 +233,7 @@ def collect():
     daily = data.get("daily", {})
 
     wcode = cur.get("weather_code", -1)
+    cloud_cover = cur.get("cloud_cover", 0)
     description = WMO_CODES.get(wcode, "\u672a\u77e5")
     wind_deg = cur.get("wind_direction_10m", 0)
 
@@ -239,7 +265,7 @@ def collect():
     moonrise, moonset = _moon_rise_set(phase_frac, sunrise, sunset)
 
     today = datetime.date.today()
-    mw_rating, mw_note = _milky_way(moon_illum, today.month)
+    mw_rating, mw_note = _milky_way(moon_illum, today.month, cloud_cover, wcode)
 
     # Hourly forecast — next 12 hours from current hour
     hourly = []
@@ -282,6 +308,7 @@ def collect():
         "wind_speed_kmh": str(int(round(cur.get("wind_speed_10m", 0)))),
         "wind_dir": _wind_direction(wind_deg),
         "wind_dir_deg": int(wind_deg),
+        "cloud_cover": int(cloud_cover or 0),
         "forecast": forecast,
         "hourly": hourly,
         "astronomy": astronomy,
