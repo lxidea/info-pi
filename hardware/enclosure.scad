@@ -191,9 +191,12 @@ mount_post_h = 4;          // boss height for heat-set insert
 mount_insert_d = 4.0;      // hole for M3 heat-set insert (3.5mm taper)
 
 // Cable cutout (bottom edge of the enclosure)
-// Sized for 1× Type-C power cable + 1× optional HDMI strain relief
-cable_cut_w = 36;     // wide enough for Type-C + room for cable bend
-cable_cut_h = 9;      // tall enough for Type-C connector body
+// Just the 1× Type-C POWER cable — the HDMI is internal (Pi→driver), so no
+// HDMI strain relief is needed here. A USB-C plug is ~8.5mm wide; 16mm gives
+// the plug body + a little bend room without leaving a needlessly big hole
+// (the blower does NOT draw from the bottom, so this isn't an air intake).
+cable_cut_w = 16;     // Type-C plug (~8.5) + margin/bend room
+cable_cut_h = 7;      // Type-C connector/plug body height
 cable_cut_offset = 0; // 0 = centered along bottom edge; +N moves right
 
 // Touch panel FFC ribbon slot (top side wall, near driver board's
@@ -1088,7 +1091,7 @@ module fin_stack_model() {
 // ─── Render selector ──────────────────────────────────────
 // Set `part` to render one of the parts at a time
 
-part = "all";  // "front" | "back" | "wall" | "all" | "preview"
+part = "preview";  // "front" | "back" | "wall" | "all" | "preview"
 
 // ─── Per-part export plumbing (non-breaking; driven by -D on the CLI) ──
 // STL (3D, for FDM/CAM):   openscad -o front.stl -D 'part="front"' ...
