@@ -159,6 +159,24 @@
 - 4 颗 M3 沉头螺丝把后盖固定到底板上
 - 拆装方便：维护时直接抬起底板从挂钩取下
 
+## 加工图纸（每个零件一套，含三视图）
+
+```bash
+# 一键生成所有零件的加工图纸到 hardware/drawings/
+bash hardware/export.sh
+```
+
+每个零件（前框 / 后盖 / 壁挂）生成：
+
+| 文件 | 用途 |
+|------|------|
+| `<part>_DIM.pdf` / `.svg` | **第一角法三视图**（主视图+俯视图+左视图）+ 尺寸标注，1:1，打印即图纸 |
+| `<part>.stl` | FDM 3D 打印（CGAL 实体，流形无错）|
+| `<part>_plan.dxf` | CAM / 激光切割轮廓 |
+| `<part>_{plan,front,side}.svg` | 单独的三视图轮廓（矢量）|
+
+图纸尺寸由 `drawings.scad` 通过 `include <enclosure.scad>` 直接复用模型常量——**改模型、重跑 export.sh，图纸自动同步**。
+
 ## 渲染和导出
 
 ```bash

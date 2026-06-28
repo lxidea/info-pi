@@ -25,6 +25,7 @@ wm_key_slot_w = 4.5;
 wm_key_slot_h = 14;
 wm_standoff_d = 9;               // air-gap stand-off OD
 wm_standoff_h = 8;               // air gap so the fan grille can breathe
+wm_plate_t = 4;                  // wall plate thickness (mirrors wall_mount)
 
 // ── drafting primitives (everything is filled 2D; thin rects = lines) ──
 LT   = 0.3;    // line thickness
@@ -92,96 +93,115 @@ module title_block(name, w, h, extra) {
 
 // ─────────────────────────────────────────────────────────────
 // SHEET: FRONT FRAME (front face plan)
-// ─────────────────────────────────────────────────────────────
-module sheet_front() {
+// ── FACE views (FRONT VIEW / 主视图): outline + holes + in-plane dims ──
+// These no longer carry the title block — three_view() adds it once.
+
+module face_front() {
     win_x = side_wall + bezel_inset;            // 4
     win_y = side_wall + bezel_inset;            // 4
     win_w = screen_w - 2*bezel_inset;           // 261
     win_h = screen_h - 2*bezel_inset;           // 61
-    color("black") {
-        rrect_outline(total_w, total_h, 4);                 // outer
-        rect_outline(win_x, win_y, win_w, win_h);           // display window
-        // dimensions
-        hdim(0, total_w, total_h, total_h + 8, str(total_w));
-        vdim(0, total_h, total_w, total_w + 8, str(total_h));
-        hdim(win_x, win_x+win_w, win_y, -8, str(win_w));
-        vdim(win_y, win_y+win_h, win_x, -8, str(win_h));
-        leader(win_x, win_y+win_h, win_x-14, win_y+win_h+6,
-               str("bezel ", bezel_inset+side_wall, " border"));
-        title_block("FRONT FRAME (1/3)", total_w, total_h,
-                    str("window ", win_w, "x", win_h, " · wall ", front_wall));
-    }
+    rrect_outline(total_w, total_h, 4);                 // outer
+    rect_outline(win_x, win_y, win_w, win_h);           // display window
+    hdim(0, total_w, total_h, total_h + 9, str(total_w));
+    vdim(win_y, win_y+win_h, win_x, -9, str(win_h));
+    hdim(win_x, win_x+win_w, win_y+win_h, total_h + 19, str(win_w));
+    leader(win_x, win_y, win_x-12, win_y-6,
+           str("bezel ", bezel_inset+side_wall, " border"));
 }
 
-// ─────────────────────────────────────────────────────────────
-// SHEET: BACK COVER (outer face plan — through-features only)
-// ─────────────────────────────────────────────────────────────
-module sheet_back() {
+module face_back() {
     cx = total_w/2; cy = total_h/2;
     vx0 = cx - mount_spacing_x/2; vx1 = cx + mount_spacing_x/2;   // 99 / 174
     vy0 = cy - mount_spacing_y/2; vy1 = cy + mount_spacing_y/2;   // 19 / 54
-    color("black") {
-        rrect_outline(total_w, total_h, 4);
-        // VESA 4-hole pattern (M3 insert)
-        for (hx=[vx0,vx1], hy=[vy0,vy1]) hole_at(hx, hy, mount_insert_d);
-        // fan intake grille (Ø outer)
-        hole_at(fan_cx, fan_cy, fan_grille_d);
-        // overall (W above, H right)
-        hdim(0, total_w, total_h, total_h + 9, str(total_w));
-        vdim(0, total_h, total_w, total_w + 9, str(total_h));
-        // VESA pattern (X above, Y right) and datum offsets (X below, Y left)
-        hdim(vx0, vx1, vy1, total_h + 19, str("VESA ", mount_spacing_x));
-        vdim(vy0, vy1, vx1, total_w + 19, str(mount_spacing_y));
-        hdim(0, vx0, vy0, -9, str(vx0));
-        vdim(0, vy0, vx0, -9, str(vy0));
-        leader(vx0, vy1, vx0-12, vy1+8, str("4x O", mount_insert_d, " (M3 insert)"));
-        // grille (X below row 2, Y left row 2)
-        hdim(0, fan_cx, -3, -18, str(fan_cx));
-        vdim(0, fan_cy, -3, -18, str(fan_cy));
-        leader(fan_cx, fan_cy, fan_cx+20, fan_cy-12, str("fan grille O", fan_grille_d));
-        title_block("BACK COVER (2/3)", total_w, total_h,
-                    str("VESA ", mount_spacing_x, "x", mount_spacing_y, " · grille O", fan_grille_d));
-    }
+    rrect_outline(total_w, total_h, 4);
+    for (hx=[vx0,vx1], hy=[vy0,vy1]) hole_at(hx, hy, mount_insert_d);
+    hole_at(fan_cx, fan_cy, fan_grille_d);
+    hdim(0, total_w, total_h, total_h + 9, str(total_w));
+    hdim(vx0, vx1, total_h, total_h + 19, str("VESA ", mount_spacing_x));
+    vdim(vy0, vy1, vx0, -9, str(mount_spacing_y));
+    hdim(0, fan_cx, 0, -9, str(fan_cx));
+    leader(vx1, vy1, vx1+12, vy1+8, str("4x O", mount_insert_d, " (M3 insert)"));
+    leader(fan_cx, fan_cy, fan_cx+20, fan_cy+12, str("fan grille O", fan_grille_d));
 }
 
-// ─────────────────────────────────────────────────────────────
-// SHEET: WALL MOUNT plate
-// ─────────────────────────────────────────────────────────────
-module sheet_wall() {
+module face_wall() {
     cx = wm_w/2;
     key_y = wm_h - 9;
     bot_y = 9;
     vx0 = cx - mount_spacing_x/2; vx1 = cx + mount_spacing_x/2;
     vcy = wm_h/2;
     vy0 = vcy - mount_spacing_y/2; vy1 = vcy + mount_spacing_y/2;
-    gx = cx + (fan_cx - total_w/2);          // grille relief window, mapped from enclosure
+    gx = cx + (fan_cx - total_w/2);
     gy = vcy + (fan_cy - total_h/2);
+    rrect_outline(wm_w, wm_h, 8);
+    hole_at(cx, key_y, wm_key_d);
+    rect_outline(cx - wm_key_slot_w/2, key_y - wm_key_slot_h, wm_key_slot_w, wm_key_slot_h);
+    hole_at(cx, bot_y, mount_hole_d);
+    for (hx=[vx0,vx1], hy=[vy0,vy1]) { hole_at(hx, hy, mount_hole_d); ring(hx, hy, wm_standoff_d); }
+    ring(gx, gy, fan_grille_d + 6);
+    hdim(0, wm_w, wm_h, wm_h + 9, str(wm_w));
+    hdim(vx0, vx1, wm_h, wm_h + 19, str("VESA ", mount_spacing_x));
+    vdim(vy0, vy1, vx0, -9, str(mount_spacing_y));
+    leader(cx, key_y, cx+18, key_y+6, str("keyhole O", wm_key_d));
+    leader(vx1, vy1, vx1+12, vy1+8, str("O", wm_standoff_d, " standoff h", wm_standoff_h));
+    leader(cx, bot_y, cx+16, bot_y-3, str("O", mount_hole_d, " anti-rot"));
+    leader(gx, gy, gx+22, gy-13, str("grille relief O", fan_grille_d + 6));
+}
+
+// 2D silhouette outline of a (rotated) part, for the elevation views.
+module outline2d() { difference() { children(); offset(-LT) children(); } }
+module view_label(x, y, txt) {
+    translate([x, y]) text(txt, size = TXT*1.05, halign = "center", valign = "center");
+}
+
+// ── THREE-VIEW sheet (first-angle): FRONT (face) + TOP below + SIDE right ──
+module three_view(p) {
+    W = (p == "wall") ? wm_w : total_w;
+    H = (p == "wall") ? wm_h : total_h;
+    D = (p == "front") ? front_wall + inner_depth + 2
+      : (p == "back")  ? back_wall + fan_t
+      :                  wm_plate_t + wm_standoff_h;
+    title = (p == "front") ? "FRONT FRAME (1/3)"
+          : (p == "back")  ? "BACK COVER (2/3)" : "WALL MOUNT (3/3)";
+    sub   = (p == "front") ? str("window 261x61 · wall ", front_wall)
+          : (p == "back")  ? str("VESA ", mount_spacing_x, "x", mount_spacing_y,
+                                 " · grille O", fan_grille_d)
+          :                  str("stand-off frame · ", wm_standoff_h, "mm air gap");
+    ty = -42 - D;            // TOP view sits below the face
+    tx = W + 40;             // SIDE view sits to the right of the face
+
     color("black") {
-        rrect_outline(wm_w, wm_h, 8);
-        // keyhole (round + slot)
-        hole_at(cx, key_y, wm_key_d);
-        rect_outline(cx - wm_key_slot_w/2, key_y - wm_key_slot_h, wm_key_slot_w, wm_key_slot_h);
-        // bottom anti-rotation screw
-        hole_at(cx, bot_y, mount_hole_d);
-        // VESA holes (through, countersunk) + stand-off OD rings
-        for (hx=[vx0,vx1], hy=[vy0,vy1]) { hole_at(hx, hy, mount_hole_d); ring(hx, hy, wm_standoff_d); }
-        // grille relief window
-        ring(gx, gy, fan_grille_d + 6);
-        // dims
-        hdim(0, wm_w, wm_h, wm_h + 9, str(wm_w));
-        vdim(0, wm_h, wm_w, wm_w + 9, str(wm_h));
-        hdim(vx0, vx1, vy1, wm_h + 19, str("VESA ", mount_spacing_x));
-        vdim(vy0, vy1, vx0, -9, str(mount_spacing_y));
-        leader(cx, key_y, cx+18, key_y+6, str("keyhole O", wm_key_d));
-        leader(vx0, vy1, vx0-12, vy1+8,
-               str("4x O", mount_hole_d, " c'sunk / O", wm_standoff_d, " standoff h", wm_standoff_h));
-        leader(cx, bot_y, cx+16, bot_y-3, str("O", mount_hole_d, " anti-rot"));
-        leader(gx, gy, gx+22, gy-13, str("grille relief O", fan_grille_d + 6));
-        title_block("WALL MOUNT (3/3)", wm_w, wm_h,
-                    str("stand-off frame · ", wm_standoff_h, "mm air gap · keyhole O", wm_key_d));
+        // FRONT VIEW (face) at origin
+        if (p == "front")     face_front();
+        else if (p == "back") face_back();
+        else                  face_wall();
+        view_label(W/2, H + 30, "FRONT VIEW");
+
+        // TOP VIEW — XZ silhouette, below, aligned in X
+        translate([0, ty])
+            outline2d() projection(cut=false) rotate([-90, 0, 0])
+                part_solid(p);
+        vdim(ty, ty + D, 0, -10, str(D));
+        view_label(W/2, ty - 7, "TOP VIEW");
+
+        // SIDE VIEW — YZ silhouette, right, aligned in Y
+        translate([tx, 0])
+            outline2d() projection(cut=false) rotate([0, 90, 0])
+                part_solid(p);
+        hdim(tx, tx + D, 0, -10, str(D));
+        view_label(tx + D/2, H + 9, "SIDE VIEW");
+
+        // title block well below the TOP view + its label
+        translate([0, ty - 30]) {
+            rect_outline(0, 0, 168, 16);
+            translate([3, 11]) text(str("INFO-PI  |  ", title), size = 3.4, valign = "center");
+            translate([3, 5.2]) text(str(W, " x ", H, " x ", D, " mm  ·  1st-angle 3-view  ·  1:1 (mm)  ·  ", sub),
+                                     size = 2.4, valign = "center");
+        }
     }
 }
 
-if (sheet == "front")     sheet_front();
-else if (sheet == "back") sheet_back();
-else if (sheet == "wall") sheet_wall();
+if (sheet == "front")     three_view("front");
+else if (sheet == "back") three_view("back");
+else if (sheet == "wall") three_view("wall");

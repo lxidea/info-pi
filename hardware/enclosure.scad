@@ -396,6 +396,22 @@ module front_frame() {
                     cube([vent_slot_w, side_wall + 3, vent_slot_h]);
             }
 
+            // ── Dedicated forced-exhaust outlet above the blower/fin stack ──
+            // The blower pushes air +y through the fins to the top wall, but
+            // the evenly-spaced convection slots miss the fin CENTRE (x=fin_cx
+            // lands on a rib between two vents), so the forced jet hits solid
+            // wall. Cut one generous outlet directly above the fin stack, the
+            // full fin width and tall enough (in z) to span the fin/jet depth,
+            // so the pushed air actually has somewhere to exhaust.
+            if (enable_fan) {
+                ex_w = fin_w + 4;     // span the fin width + a little margin
+                ex_h = 8;             // z height — covers the fin/jet depth
+                translate([fin_cx - ex_w / 2,
+                           total_h - side_wall - 1,
+                           vent_z - ex_h / 2])
+                    cube([ex_w, side_wall + 3, ex_h]);
+            }
+
             // ── BOTTOM wall: slots in the 4 clear zones between
             // existing cutouts (SD, power cable, touch FFC) ──
             // Clear zones approximate (x ranges):
@@ -1072,7 +1088,7 @@ module fin_stack_model() {
 // ─── Render selector ──────────────────────────────────────
 // Set `part` to render one of the parts at a time
 
-part = "wall";  // "front" | "back" | "wall" | "all" | "preview"
+part = "all";  // "front" | "back" | "wall" | "all" | "preview"
 
 // ─── Per-part export plumbing (non-breaking; driven by -D on the CLI) ──
 // STL (3D, for FDM/CAM):   openscad -o front.stl -D 'part="front"' ...
