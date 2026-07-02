@@ -64,6 +64,22 @@ module hole_at(cx, cy, d) {
 module ring(cx, cy, d) {
     translate([cx, cy]) difference() { circle(d = d + 2*LT); circle(d = d); }
 }
+// 2D footprint of the concentric-ring intake grille (mirrors fan_grille_cut):
+// annular slots minus the four radial spoke bridges.
+module grille2d() {
+    step = fan_grille_rib + 1.4;
+    n = fan_grille_rings;
+    spoke_w = fan_grille_rib + 0.4;
+    difference() {
+        for (i = [0 : n - 1]) {
+            r_out = fan_grille_d/2 - i * step;
+            r_in  = r_out - 1.4;
+            if (r_in > 0) difference() { circle(r = r_out); circle(r = r_in); }
+        }
+        for (a = [45 : 90 : 359])
+            rotate(a) translate([-spoke_w/2, 0]) square([spoke_w, fan_grille_d/2 + 1]);
+    }
+}
 module leader(cx, cy, tx, ty, label) {
     hull() { translate([cx,cy]) circle(LT); translate([tx,ty]) circle(LT); }
     translate([tx + (tx>=cx?1:-1)*1.2, ty])
@@ -116,13 +132,16 @@ module face_back() {
     vy0 = cy - mount_spacing_y/2; vy1 = cy + mount_spacing_y/2;   // 19 / 54
     rrect_outline(total_w, total_h, 4);
     for (hx=[vx0,vx1], hy=[vy0,vy1]) hole_at(hx, hy, mount_insert_d);
-    hole_at(fan_cx, fan_cy, fan_grille_d);
+    translate([fan_cx, fan_cy]) outline2d() grille2d();   // ring-and-spoke intake grille
+    hole_at(fan_cx, fan_cy, 4);                            // central hub hole
+    ring(fan_cx, fan_cy, fan_grille_d);                   // grille envelope Ø ref
     hdim(0, total_w, total_h, total_h + 9, str(total_w));
     hdim(vx0, vx1, total_h, total_h + 19, str("VESA ", mount_spacing_x));
     vdim(vy0, vy1, vx0, -9, str(mount_spacing_y));
     hdim(0, fan_cx, 0, -9, str(fan_cx));
     leader(vx1, vy1, vx1+12, vy1+8, str("4x O", mount_insert_d, " (M3 insert)"));
-    leader(fan_cx, fan_cy, fan_cx+20, fan_cy+12, str("fan grille O", fan_grille_d));
+    leader(fan_cx, fan_cy, fan_cx+20, fan_cy+12,
+           str("fan grille O", fan_grille_d, " (", fan_grille_rings, " rings + 4 spokes)"));
 }
 
 module face_wall() {
