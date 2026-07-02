@@ -555,21 +555,32 @@ module fan_cradle() {
 
 // Concentric-ring intake grille cut through the back cover, centred on
 // the impeller eye. Thin ribs between rings keep dust out and preserve
-// plate strength.
+// plate strength. The slots are NOT full 360° rings — radial spokes are
+// left uncut so every concentric rib stays bridged to the wall and to the
+// central hub; otherwise the ribs print as loose, disconnected loops.
 module fan_grille_cut() {
     step = fan_grille_rib + 1.4;          // ring pitch (rib + slot width)
     n = fan_grille_rings;
+    spoke_w = fan_grille_rib + 0.4;       // width of each radial bridge
     translate([fan_cx, fan_cy, -0.1])
-        for (i = [0 : n - 1]) {
-            r_out = fan_grille_d/2 - i * step;
-            r_in  = r_out - 1.4;           // 1.4mm slot width
-            if (r_in > 0)
-                linear_extrude(back_wall + 0.2)
-                    difference() {
-                        circle(r = r_out, $fn = 64);
-                        circle(r = r_in,  $fn = 64);
-                    }
-        }
+        linear_extrude(back_wall + 0.2)
+            difference() {
+                // all the annular slots, unioned
+                for (i = [0 : n - 1]) {
+                    r_out = fan_grille_d/2 - i * step;
+                    r_in  = r_out - 1.4;   // 1.4mm slot width
+                    if (r_in > 0)
+                        difference() {
+                            circle(r = r_out, $fn = 64);
+                            circle(r = r_in,  $fn = 64);
+                        }
+                }
+                // radial spokes: uncut bridges that tie all rings together
+                for (a = [45 : 90 : 359])
+                    rotate(a)
+                        translate([-spoke_w/2, 0])
+                            square([spoke_w, fan_grille_d/2 + 1]);
+            }
     // Plus a small central hole so the impeller hub area also draws air
     translate([fan_cx, fan_cy, -0.1])
         cylinder(d = 4, h = back_wall + 0.2, $fn = 24);
