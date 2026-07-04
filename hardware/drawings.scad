@@ -113,10 +113,10 @@ module title_block(name, w, h, extra) {
 // These no longer carry the title block — three_view() adds it once.
 
 module face_front() {
-    win_x = side_wall + bezel_inset;            // 4
-    win_y = side_wall + bezel_inset;            // 4
     win_w = screen_w - 2*bezel_inset;           // 261
     win_h = screen_h - 2*bezel_inset;           // 61
+    win_x = (total_w - win_w) / 2;              // centred
+    win_y = (total_h - win_h) / 2;
     rrect_outline(total_w, total_h, 4);                 // outer
     rect_outline(win_x, win_y, win_w, win_h);           // display window
     for (p = join_positions) ring(p[0], p[1], join_boss_d);   // internal corner bosses

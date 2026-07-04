@@ -371,6 +371,9 @@ module front_frame() {
     difference() {
         // Outer shell
         rounded_rect(total_w, total_h, 4, shell_depth);
+        // Glass CENTRED on the front face (equal bezel border all round).
+        sx = (total_w - screen_w) / 2;     // glass X origin
+        sy = (total_h - screen_h) / 2;     // glass Y origin
         // ── Display VIEWING OPENING — cut THROUGH the front bezel so the
         //    LCD's active area is actually visible. It is smaller than the
         //    glass, so the bezel overhangs the glass edge by bezel_inset:
@@ -378,8 +381,8 @@ module front_frame() {
         //    behind. (Previously this cube started at z=front_wall, i.e.
         //    BEHIND the face — the front stayed solid and the screen had
         //    nowhere to show. It now breaches the face from z=-1.)
-        translate([side_wall + bezel_inset,
-                   side_wall + bezel_inset,
+        translate([sx + bezel_inset,
+                   sy + bezel_inset,
                    -1])
             cube([screen_w - 2*bezel_inset,
                   screen_h - 2*bezel_inset,
@@ -388,7 +391,7 @@ module front_frame() {
         //    in from behind and seats against the bezel ledge; walls locate
         //    it in X/Y. Opening is inset by bezel_inset, so the glass edge
         //    overhangs under the bezel by that much. Depth = screen_t.
-        translate([side_wall, side_wall, front_wall])
+        translate([sx, sy, front_wall])
             cube([screen_w, screen_h, screen_t + 0.4]);
         // Inner cavity (electronics; open to the back for the cover)
         translate([side_wall, side_wall, front_wall + screen_t])
