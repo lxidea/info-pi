@@ -18,13 +18,15 @@
 
 // ─── Parameters (edit these freely) ───────────────────────
 
-// Screen physical dimensions
-screen_w = 265;
+// Screen physical dimensions — real panel: 266 x 65 x 4 mm glass,
+// native resolution 440 x 1920 (portrait panel mounted landscape as
+// 1920 x 440). AA (active-area) dims not yet known → bezel_inset assumed.
+screen_w = 266;
 screen_h = 65;
 screen_t = 4;
 
 // How much of the screen edge the front bezel covers (must hide LCD bezel)
-bezel_inset = 2;   // mm inward from screen edge
+bezel_inset = 2;   // mm inward from screen edge (assumed until AA is known)
 
 // Driver board dimensions (HM-V1.0B)
 board_w = 72;
