@@ -1063,6 +1063,7 @@ module heat_pipe_model() {
         translate([x_turn - hp_w/2, y_into - hp_w/2, z_back])
             cube([fin_cx - x_turn + hp_w/2, hp_w, hp_t]);
     }
+    if (is_undef(NO_LABELS))
     color("SaddleBrown")
         translate([soc_gx + 6, soc_gy - 11, z_front + hp_t + 0.1])
             linear_extrude(0.4)
@@ -1092,6 +1093,7 @@ module fin_stack_model() {
         for (i = [0 : n_fins - 1])
             translate([fin_cx - fin_w/2 + i*pitch + pitch/2 - 0.4, fin_y0, z0 + base_t])
                 cube([0.8, fin_len, fin_h]);
+    if (is_undef(NO_LABELS))
     color("DeepSkyBlue")
         translate([fin_cx, fin_y0 + fin_len + 3, z0 + base_t + fin_h])
             linear_extrude(0.4)
@@ -1113,9 +1115,10 @@ draw2d = false;    // true → emit a flat 2D projection instead of the 3D solid
 view   = "plan";   // "plan" (XY footprint) | "front" (XZ) | "side" (YZ)
 
 module part_solid(p) {
-    if (p == "front")      front_frame();
-    else if (p == "back")  back_cover();
-    else if (p == "wall")  wall_mount();
+    if (p == "front")       front_frame();
+    else if (p == "back")   back_cover();
+    else if (p == "wall")   wall_mount();
+    else if (p == "cooler") { heat_pipe_model(); fin_stack_model(); }
 }
 
 module emit_view(p, v) {
@@ -1138,6 +1141,8 @@ else if (part == "back")
     color("SlateGray") back_cover();
 else if (part == "wall")
     color("LightGray") wall_mount();
+else if (part == "cooler")
+    part_solid("cooler");
 else if (part == "all") {
     color("DimGray") front_frame();
     translate([0, 0, -back_wall - 1])

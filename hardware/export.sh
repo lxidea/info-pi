@@ -36,6 +36,13 @@ for p in front back wall; do
     openscad -q -o "$OUT/${s}_DIM.svg" -D "sheet=\"$p\"" "$DRW"
 done
 
+# Cooler assembly (heat pipe + stock heatsink). NOT a printed part — the
+# primary output is the bend/routing template (DIM sheet). A label-free STL
+# is also emitted purely as a 3D assembly reference (no plan/side/DXF).
+echo "==> heat_pipe_cooler"
+openscad -q -o "$OUT/heat_pipe_cooler.stl" -D 'part="cooler"' -D NO_LABELS=1 "$SRC"
+openscad -q -o "$OUT/heat_pipe_cooler_DIM.svg" -D 'sheet="cooler"' "$DRW"
+
 # Optional: render the dimensioned sheets to print-ready PDF (vector, 1:1).
 # Prefer the project venv (system python3 is PEP-668 externally-managed);
 # fall back to any python3 that has cairosvg.
@@ -45,8 +52,7 @@ for cand in "$(dirname "$0")/../venv/bin/python3" python3; do
 done
 if [ -n "$PY" ]; then
     echo "==> PDF (cairosvg via $PY)"
-    for p in front back wall; do
-        s="${STEM[$p]}"
+    for s in front_frame back_cover wall_mount heat_pipe_cooler; do
         "$PY" -c "import cairosvg; cairosvg.svg2pdf(url='$OUT/${s}_DIM.svg', write_to='$OUT/${s}_DIM.pdf')"
     done
 else

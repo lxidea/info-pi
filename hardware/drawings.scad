@@ -168,6 +168,135 @@ module face_wall() {
     leader(gx, gy, gx+22, gy-13, str("grille relief O", fan_grille_d + 6));
 }
 
+// ─────────────────────────────────────────────────────────────
+// SHEET: COOLER — heat pipe (bent, off-the-shelf) + stock heatsink
+// A DIY-kit part: nothing is 3D-printed here, so the drawing is a
+// BEND / ROUTING TEMPLATE (developed length + bend table) plus the
+// heatsink extrusion spec — not a printed-part three-view.
+// All geometry is reconstructed from the frozen model constants that
+// enclosure.scad exposes (soc_gx, hp_lane_y, fin_cx …); the local
+// derived values below MIRROR heat_pipe_model()/fin_stack_model().
+// ─────────────────────────────────────────────────────────────
+hp_z_back  = back_wall + 0.5;                       // back routing plane ≈ 2.5
+hp_z_front = back_wall + board_back_gap + 1.4 + 1.5; // SoC-die press plane ≈ 6.9
+hp_x_drop  = side_wall + 10 + pi_short + 8;          // z-drop x ≈ 50 (clear of Pi)
+hp_x_turn  = fan_cx - fan_w/2 - 5;                   // climb x ≈ 115 (left of blower)
+hp_y_into  = fin_y0 + 3;                             // enters fin base ≈ 44
+hp_base_t  = 1.5;                                    // heatsink base plate thickness
+
+// Pipe centreline nodes in the enclosure XY plane (viewed from the back).
+// P0 evaporator → P1 after y-jog → P2 z-drop point → P3 after back run →
+// P4 after climb → P5 into fin base.
+hp_nodes = [
+    [soc_gx,    soc_gy],       // P0  evaporator pad centre (on SoC die)
+    [soc_gx,    hp_lane_y],    // P1  jog up to the clear lane
+    [hp_x_drop, hp_lane_y],    // P2  drop to back plane here
+    [hp_x_turn, hp_lane_y],    // P3  end of back-plane run
+    [hp_x_turn, hp_y_into],    // P4  climb to fin level
+    [fin_cx,    hp_y_into],    // P5  into the heatsink groove
+];
+function _seg(i) = norm(hp_nodes[i+1] - hp_nodes[i]);
+hp_dev = _seg(0)+_seg(1)+_seg(2)+_seg(3)+_seg(4) + (hp_z_front-hp_z_back);
+
+// rounded 6mm-wide pipe footprint (bends carry a radius, like the real pipe)
+module pipe_path2d() {
+    for (i = [0 : len(hp_nodes)-2])
+        hull() {
+            translate(hp_nodes[i])   circle(d = hp_w);
+            translate(hp_nodes[i+1]) circle(d = hp_w);
+        }
+}
+module pipe_centerline() {
+    for (i = [0 : len(hp_nodes)-2])
+        hull() { translate(hp_nodes[i]) circle(LT); translate(hp_nodes[i+1]) circle(LT); }
+}
+// a small filled bend flag with a callout label
+module bend_flag(p, tx, ty, label) {
+    translate(p) circle(d = 2.4);
+    leader(p[0], p[1], tx, ty, label);
+}
+
+// PLAN — the bending/routing template (looking at the back cover)
+module cooler_plan() {
+    // pipe body outline + centreline
+    outline2d() pipe_path2d();
+    pipe_centerline();
+    // evaporator pad (flattened pipe end pressed on the SoC die)
+    rect_outline(soc_gx - 7, soc_gy - 7, 14, 14);
+    // heatsink block footprint + groove + fin lines
+    hb_x = fin_cx - fin_w/2;
+    rect_outline(hb_x, fin_y0, fin_w, fin_len);
+    rect_outline(hb_x, hp_y_into - hp_w/2, fin_w/2, hp_w);      // pipe groove
+    pitch = fin_w / n_fins;
+    for (i = [0 : n_fins-1])
+        vline(fin_y0 + 1, fin_y0 + fin_len - 1, hb_x + i*pitch + pitch/2);
+    // node / segment dimensions (developed run)
+    vdim(soc_gy, hp_lane_y, soc_gx, soc_gx - 10, str(hp_lane_y - soc_gy));      // jog 8
+    hdim(soc_gx, hp_x_drop, hp_lane_y, hp_lane_y - 8, str(hp_x_drop - soc_gx)); // front run 23
+    hdim(hp_x_drop, hp_x_turn, hp_lane_y, hp_lane_y - 16, str(hp_x_turn - hp_x_drop)); // back run 65
+    vdim(hp_lane_y, hp_y_into, hp_x_turn, hp_x_turn + 26, str(hp_y_into - hp_lane_y));  // climb 8
+    hdim(hp_x_turn, fin_cx, hp_y_into, hp_y_into + 22, str(fin_cx - hp_x_turn));        // into fin 20
+    hdim(hb_x, hb_x + fin_w, fin_y0 + fin_len, fin_y0 + fin_len + 15, str("heatsink ", fin_w));
+    vdim(fin_y0, fin_y0 + fin_len, hb_x + fin_w, hb_x + fin_w + 10, str(fin_len));
+    // bend + feature callouts
+    bend_flag(hp_nodes[1], soc_gx + 3, hp_lane_y + 9, "B1 90");
+    bend_flag(hp_nodes[2], hp_x_drop + 4, hp_lane_y + 10, "B2 Z-DROP");
+    bend_flag(hp_nodes[3], hp_x_turn - 20, hp_lane_y - 4, "B3 90");
+    bend_flag(hp_nodes[4], hp_x_turn - 20, hp_y_into + 6, "B4 90");
+    leader(soc_gx, soc_gy, soc_gx + 10, soc_gy - 15,
+           str("evaporator pad 14x14 (on SoC)"));
+    leader(fin_cx - fin_w/4, hp_y_into, fin_cx + 6, hp_y_into - 12,
+           str("groove ", hp_w, "x", hp_t, " (pipe epoxied)"));
+}
+
+// DEPTH elevation (X–Z), shows the single out-of-plane z-drop step
+module cooler_depth() {
+    zs = 1;                       // 1:1
+    bz = 0;                       // baseline (back-cover inner face) local y
+    function EZ(z) = bz + z*zs;
+    // back-cover wall slab (ground reference)
+    color("black") rect_outline(soc_gx - 12, EZ(0), (fin_cx+18) - (soc_gx-12), back_wall);
+    // pipe as a 3mm(hp_t)-thick band along X at z_front then z_back
+    pts = [ [soc_gx, hp_z_front], [hp_x_drop, hp_z_front],
+            [hp_x_drop, hp_z_back], [fin_cx, hp_z_back] ];
+    for (i = [0 : len(pts)-2])
+        hull() {
+            translate([pts[i][0],   EZ(pts[i][1])])   circle(d = hp_t);
+            translate([pts[i+1][0], EZ(pts[i+1][1])]) circle(d = hp_t);
+        }
+    // evaporator pad slab (14 wide) at the front plane
+    rect_outline(soc_gx - 7, EZ(hp_z_front) - hp_t/2, 14, hp_t);
+    // heatsink base + fins in elevation
+    hb_x = fin_cx - fin_w/2;
+    rect_outline(hb_x, EZ(hp_z_back), fin_w, hp_base_t);
+    pitch = fin_w / n_fins;
+    for (i = [0 : n_fins-1])
+        rect_outline(hb_x + i*pitch + pitch/2 - 0.4, EZ(hp_z_back) + hp_base_t, 0.8, fin_h);
+    // dims
+    vdim(EZ(0), EZ(hp_z_front), soc_gx - 7, soc_gx - 16, str("h", hp_z_front));
+    vdim(EZ(hp_z_back), EZ(hp_z_front), hp_x_drop, hp_x_drop + 14,
+         str("drop ", hp_z_front - hp_z_back));
+    vdim(EZ(hp_z_back), EZ(hp_z_back + hp_base_t + fin_h), fin_cx + fin_w/2,
+         fin_cx + fin_w/2 + 10, str("fins ", hp_base_t + fin_h));
+    view_label((soc_gx + fin_cx)/2, EZ(0) - 8, "DEPTH (X-Z) — z-drop step");
+}
+
+// Heatsink extrusion end-profile (Y–Z look): 30 wide, 9 fins, base groove
+module cooler_heatsink() {
+    pitch = fin_w / n_fins;
+    rect_outline(0, 0, fin_w, hp_base_t);                      // base
+    for (i = [0 : n_fins-1])
+        rect_outline(i*pitch + pitch/2 - 0.4, hp_base_t, 0.8, fin_h);   // fins
+    // groove in the base underside (pipe seat)
+    rect_outline(fin_w/2 - hp_w/2, -hp_t, hp_w, hp_t);
+    hdim(0, fin_w, hp_base_t + fin_h, hp_base_t + fin_h + 8, str(fin_w));
+    vdim(0, hp_base_t + fin_h, fin_w, fin_w + 10, str(hp_base_t + fin_h));
+    vdim(-hp_t, 0, 0, -8, str(hp_base_t));
+    leader(fin_w/2, -hp_t, fin_w/2 + 10, -hp_t - 6, str("groove ", hp_w, "x", hp_t));
+    leader(pitch/2, hp_base_t + fin_h, -6, hp_base_t + fin_h + 4, str(n_fins, " fins x", fin_h, "h"));
+    view_label(fin_w/2, hp_base_t + fin_h + 16, "HEATSINK PROFILE");
+}
+
 // 2D silhouette outline of a (rotated) part, for the elevation views.
 module outline2d() { difference() { children(); offset(-LT) children(); } }
 module view_label(x, y, txt) {
@@ -221,6 +350,36 @@ module three_view(p) {
     }
 }
 
-if (sheet == "front")     three_view("front");
-else if (sheet == "back") three_view("back");
-else if (sheet == "wall") three_view("wall");
+// COOLER assembly sheet: routing template + depth step + heatsink profile + table
+module cooler_sheet() {
+    color("black") translate([20, 22]) {
+        // PLAN routing/bend template (top)
+        cooler_plan();
+        view_label((soc_gx + fin_cx)/2, fin_y0 + fin_len + 18, "PLAN — bend / routing template");
+        // DEPTH elevation (below the plan), aligned in X
+        translate([0, -34]) cooler_depth();
+        // HEATSINK end-profile (to the right)
+        translate([fin_cx + 55, fin_y0]) cooler_heatsink();
+        // bend / cut table + title block, bottom-left
+        translate([soc_gx - 12, -74]) {
+            rect_outline(0, 0, 176, 22);
+            translate([3, 17.5]) text("INFO-PI  |  HEAT-PIPE COOLER (DIY kit — no CNC / no solder)",
+                                      size = 3.2, valign = "center");
+            translate([3, 12.3]) text(str("pipe: O6 round -> flattened ", hp_w, "x", hp_t,
+                                          "  ·  developed centreline ~", round(hp_dev),
+                                          " mm  ·  cut stock ~", round(hp_dev) + 8, " mm"),
+                                      size = 2.4, valign = "center");
+            translate([3, 7.6]) text("bends: B1/B3/B4 = 90 in-plane  ·  B2 = z-crank (step back 4.4)  ·  ends: evaporator pad 14x14",
+                                     size = 2.2, valign = "center");
+            translate([3, 3.0]) text(str("heatsink: stock Al ", fin_w, "x", fin_len, "x",
+                                         hp_base_t + fin_h, ", ", n_fins, " fins, groove ",
+                                         hp_w, "x", hp_t, " (pipe epoxied)  ·  1:1 (mm)"),
+                                     size = 2.2, valign = "center");
+        }
+    }
+}
+
+if (sheet == "front")       three_view("front");
+else if (sheet == "back")   three_view("back");
+else if (sheet == "wall")   three_view("wall");
+else if (sheet == "cooler") cooler_sheet();
