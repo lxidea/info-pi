@@ -280,8 +280,11 @@ fin_cx = 135;             // fin block centre x (clear of VESA posts 99/174)
 fin_w = 30;               // x extent (across the airflow)
 fin_y0 = 41;              // fins start just above the blower nozzle
 fin_len = 18;             // y extent (the airflow direction)
-fin_h = 6;                // z height of the fins
-n_fins = 9;               // plate-fin count
+fin_h = 6.5;              // z height — capped by the 17mm-deep enclosure:
+                          // base top z≈4, screen back z≈11, so ~6.5 is the
+                          // practical max (fin tip z≈10.5, ~0.5 screen gap)
+fin_t = 0.8;              // fin plate thickness
+n_fins = 15;              // denser plate-fin count (pitch = fin_w/n_fins = 2mm)
 
 // Blower (3007/3004) — in the clear centre strip, below the fins, +y
 fan_w = 30;               // 30×30 body footprint
@@ -1033,11 +1036,9 @@ module heat_pipe_model() {
     x_drop  = side_wall + 10 + pi_short + 8;          // ≈ 50, clear of Pi/ports
     x_turn  = fan_cx - fan_w/2 - 5;                   // ≈ 115, left of the fan
     y_into  = fin_y0 + 3;                             // enters fin base
-    // Flattened pipe END pressed on the SoC die (thermal pad between) —
-    // a widened/flattened section of the SAME pipe, NOT a separate block.
-    color([0.74, 0.47, 0.22])
-        translate([soc_gx - 7, soc_gy - 7, z_front])
-            cube([14, 14, hp_t]);
+    // NOTE: the SoC-end thermal interface is a SEPARATE part — the 吸热端
+    // cold plate (evaporator_block). The pipe's flat end nests in that
+    // plate's groove; the pipe itself (below) is just the bent 6x3 tube.
     color([0.80, 0.52, 0.30]) {
         // vertical jog: the SoC sits in the HDMI band (y≈28), so first climb
         // to the connector-free crossing lane (y≈36) — done at x≈27, well
@@ -1067,8 +1068,30 @@ module heat_pipe_model() {
     color("SaddleBrown")
         translate([soc_gx + 6, soc_gy - 11, z_front + hp_t + 0.1])
             linear_extrude(0.4)
-                text("pre-flattened heat pipe: SoC die -> stock heatsink (epoxy)",
+                text("heat pipe (bent 6x3): cold plate -> finned condenser",
                      size = 2.2, halign = "center");
+}
+
+// 吸热端 — COLD PLATE / EVAPORATOR (no fins). A SEPARATE finless block
+// clamped on the SoC die; the heat pipe's flat end nests in a shallow
+// groove on its top face. This is the heat-ABSORBING exchanger; the
+// finned block (fin_stack_model) is the heat-REJECTING one.
+module evaporator_block() {
+    z_front = back_wall + board_back_gap + 1.4 + 1.5;   // pipe evaporator plane ≈ 6.9
+    eb_w = 14; eb_t = 3;                                 // 14x14 footprint, 3mm body
+    z0 = z_front - eb_t;                                 // sits on the SoC die
+    color([0.72, 0.45, 0.20])
+        difference() {
+            translate([soc_gx - eb_w/2, soc_gy - eb_w/2, z0]) cube([eb_w, eb_w, eb_t]);
+            // shallow pipe-seat groove on top (runs along y — the pipe's jog dir)
+            translate([soc_gx - hp_w/2, soc_gy - eb_w/2 - 0.1, z_front - 1.2])
+                cube([hp_w, eb_w + 0.2, 1.4]);
+        }
+    if (is_undef(NO_LABELS))
+        color("SaddleBrown")
+            translate([soc_gx, soc_gy - eb_w/2 - 3, z_front + 0.1])
+                linear_extrude(0.4)
+                    text("cold plate (evaporator, no fins)", size = 2.2, halign = "center");
 }
 
 // STOCK extruded-aluminium heatsink (off-the-shelf, e.g. a 30mm-wide
@@ -1091,13 +1114,13 @@ module fin_stack_model() {
     pitch = fin_w / n_fins;
     color([0.82, 0.82, 0.85, 0.9])
         for (i = [0 : n_fins - 1])
-            translate([fin_cx - fin_w/2 + i*pitch + pitch/2 - 0.4, fin_y0, z0 + base_t])
-                cube([0.8, fin_len, fin_h]);
+            translate([fin_cx - fin_w/2 + i*pitch + pitch/2 - fin_t/2, fin_y0, z0 + base_t])
+                cube([fin_t, fin_len, fin_h]);
     if (is_undef(NO_LABELS))
     color("DeepSkyBlue")
         translate([fin_cx, fin_y0 + fin_len + 3, z0 + base_t + fin_h])
             linear_extrude(0.4)
-                text("stock Al heatsink (pipe epoxied in base) → top vents",
+                text(str("condenser (finned): ", n_fins, " fins x", fin_h, "h -> top vents"),
                      size = 2.2, halign = "center");
 }
 
@@ -1118,9 +1141,10 @@ module part_solid(p) {
     if (p == "front")         front_frame();
     else if (p == "back")     back_cover();
     else if (p == "wall")     wall_mount();
-    else if (p == "pipe")     heat_pipe_model();      // heat pipe alone
-    else if (p == "heatsink") fin_stack_model();      // stock heatsink alone
-    else if (p == "cooler")   { heat_pipe_model(); fin_stack_model(); }
+    else if (p == "evaporator") evaporator_block();   // 吸热端 cold plate alone
+    else if (p == "pipe")       heat_pipe_model();     // heat pipe alone
+    else if (p == "heatsink")   fin_stack_model();     // 放热段 finned condenser alone
+    else if (p == "cooler")     { evaporator_block(); heat_pipe_model(); fin_stack_model(); }
 }
 
 module emit_view(p, v) {
@@ -1143,7 +1167,7 @@ else if (part == "back")
     color("SlateGray") back_cover();
 else if (part == "wall")
     color("LightGray") wall_mount();
-else if (part == "cooler" || part == "pipe" || part == "heatsink")
+else if (part == "cooler" || part == "pipe" || part == "heatsink" || part == "evaporator")
     part_solid(part);
 else if (part == "all") {
     color("DimGray") front_frame();
@@ -1171,6 +1195,7 @@ else if (part == "preview") {
     driver_board_model();
     pi_board_model();
     if (enable_fan) {
+        evaporator_block();
         heat_pipe_model();
         fin_stack_model();
         fan_model();

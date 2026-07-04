@@ -42,9 +42,10 @@ done
 # groove), so they are emitted as separate label-free reference STLs — a
 # merged mesh can't be told apart. A combined STL is kept for context.
 echo "==> heat_pipe_cooler"
-openscad -q -o "$OUT/heat_pipe.stl"           -D 'part="pipe"'     -D NO_LABELS=1 "$SRC"
-openscad -q -o "$OUT/heatsink.stl"            -D 'part="heatsink"' -D NO_LABELS=1 "$SRC"
-openscad -q -o "$OUT/heat_pipe_cooler.stl"    -D 'part="cooler"'   -D NO_LABELS=1 "$SRC"
+openscad -q -o "$OUT/cold_plate.stl"          -D 'part="evaporator"' -D NO_LABELS=1 "$SRC"
+openscad -q -o "$OUT/heat_pipe.stl"           -D 'part="pipe"'       -D NO_LABELS=1 "$SRC"
+openscad -q -o "$OUT/condenser.stl"           -D 'part="heatsink"'   -D NO_LABELS=1 "$SRC"
+openscad -q -o "$OUT/heat_pipe_cooler.stl"    -D 'part="cooler"'     -D NO_LABELS=1 "$SRC"
 openscad -q -o "$OUT/heat_pipe_cooler_DIM.svg" -D 'sheet="cooler"' "$DRW"
 
 # Optional: render the dimensioned sheets to print-ready PDF (vector, 1:1).

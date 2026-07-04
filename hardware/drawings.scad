@@ -221,8 +221,9 @@ module cooler_plan() {
     // pipe body outline + centreline
     outline2d() pipe_path2d();
     pipe_centerline();
-    // evaporator pad (flattened pipe end pressed on the SoC die)
+    // 吸热端 cold plate (separate finless block) + its pipe-seat groove
     rect_outline(soc_gx - 7, soc_gy - 7, 14, 14);
+    rect_outline(soc_gx - hp_w/2, soc_gy - 7, hp_w, 14);       // pipe groove
     // heatsink block footprint + groove + fin lines
     hb_x = fin_cx - fin_w/2;
     rect_outline(hb_x, fin_y0, fin_w, fin_len);
@@ -244,7 +245,7 @@ module cooler_plan() {
     bend_flag(hp_nodes[3], hp_x_turn - 20, hp_lane_y - 4, "B3 90");
     bend_flag(hp_nodes[4], hp_x_turn - 20, hp_y_into + 6, "B4 90");
     leader(soc_gx, soc_gy, soc_gx + 10, soc_gy - 15,
-           str("evaporator pad 14x14 (on SoC)"));
+           str("cold plate 14x14 (evaporator, separate, no fins)"));
     leader(fin_cx - fin_w/4, hp_y_into, fin_cx + 6, hp_y_into - 12,
            str("groove ", hp_w, "x", hp_t, " (pipe epoxied)"));
 }
@@ -264,14 +265,14 @@ module cooler_depth() {
             translate([pts[i][0],   EZ(pts[i][1])])   circle(d = hp_t);
             translate([pts[i+1][0], EZ(pts[i+1][1])]) circle(d = hp_t);
         }
-    // evaporator pad slab (14 wide) at the front plane
-    rect_outline(soc_gx - 7, EZ(hp_z_front) - hp_t/2, 14, hp_t);
+    // 吸热端 cold plate — a separate 14-wide block BELOW the pipe, on the SoC
+    rect_outline(soc_gx - 7, EZ(hp_z_front - 3), 14, 3);
     // heatsink base + fins in elevation
     hb_x = fin_cx - fin_w/2;
     rect_outline(hb_x, EZ(hp_z_back), fin_w, hp_base_t);
     pitch = fin_w / n_fins;
     for (i = [0 : n_fins-1])
-        rect_outline(hb_x + i*pitch + pitch/2 - 0.4, EZ(hp_z_back) + hp_base_t, 0.8, fin_h);
+        rect_outline(hb_x + i*pitch + pitch/2 - fin_t/2, EZ(hp_z_back) + hp_base_t, fin_t, fin_h);
     // dims
     vdim(EZ(0), EZ(hp_z_front), soc_gx - 7, soc_gx - 16, str("h", hp_z_front));
     vdim(EZ(hp_z_back), EZ(hp_z_front), hp_x_drop, hp_x_drop + 14,
@@ -281,20 +282,21 @@ module cooler_depth() {
     view_label((soc_gx + fin_cx)/2, EZ(0) - 8, "DEPTH (X-Z) — z-drop step");
 }
 
-// Heatsink extrusion end-profile (Y–Z look): 30 wide, 9 fins, base groove
+// 放热段 condenser extrusion end-profile (Y–Z look): width, fins, base groove
 module cooler_heatsink() {
     pitch = fin_w / n_fins;
     rect_outline(0, 0, fin_w, hp_base_t);                      // base
     for (i = [0 : n_fins-1])
-        rect_outline(i*pitch + pitch/2 - 0.4, hp_base_t, 0.8, fin_h);   // fins
+        rect_outline(i*pitch + pitch/2 - fin_t/2, hp_base_t, fin_t, fin_h);   // fins
     // groove in the base underside (pipe seat)
     rect_outline(fin_w/2 - hp_w/2, -hp_t, hp_w, hp_t);
     hdim(0, fin_w, hp_base_t + fin_h, hp_base_t + fin_h + 8, str(fin_w));
     vdim(0, hp_base_t + fin_h, fin_w, fin_w + 10, str(hp_base_t + fin_h));
     vdim(-hp_t, 0, 0, -8, str(hp_base_t));
     leader(fin_w/2, -hp_t, fin_w/2 + 10, -hp_t - 6, str("groove ", hp_w, "x", hp_t));
-    leader(pitch/2, hp_base_t + fin_h, -6, hp_base_t + fin_h + 4, str(n_fins, " fins x", fin_h, "h"));
-    view_label(fin_w/2, hp_base_t + fin_h + 16, "HEATSINK PROFILE");
+    leader(pitch/2, hp_base_t + fin_h, -6, hp_base_t + fin_h + 4,
+           str(n_fins, " fins x", fin_h, "h @ ", pitch, " pitch"));
+    view_label(fin_w/2, hp_base_t + fin_h + 16, "CONDENSER PROFILE (finned)");
 }
 
 // 2D silhouette outline of a (rotated) part, for the elevation views.
@@ -363,18 +365,17 @@ module cooler_sheet() {
         // bend / cut table + title block, bottom-left
         translate([soc_gx - 12, -74]) {
             rect_outline(0, 0, 176, 22);
-            translate([3, 17.5]) text("INFO-PI  |  HEAT-PIPE COOLER (DIY kit — no CNC / no solder)",
-                                      size = 3.2, valign = "center");
-            translate([3, 12.3]) text(str("pipe: O6 round -> flattened ", hp_w, "x", hp_t,
-                                          "  ·  developed centreline ~", round(hp_dev),
-                                          " mm  ·  cut stock ~", round(hp_dev) + 8, " mm"),
-                                      size = 2.4, valign = "center");
-            translate([3, 7.6]) text("bends: B1/B3/B4 = 90 in-plane  ·  B2 = z-crank (step back 4.4)  ·  ends: evaporator pad 14x14",
+            translate([3, 17.5]) text("INFO-PI  |  HEAT-PIPE COOLER — 3 parts (DIY kit, no CNC / no solder)",
+                                      size = 3.0, valign = "center");
+            translate([3, 12.6]) text(str("1) cold plate 14x14x3 evaporator (finless, on SoC)   ·   2) heat pipe O6 -> flat ",
+                                          hp_w, "x", hp_t, ", developed ~", round(hp_dev), " mm"),
+                                      size = 2.2, valign = "center");
+            translate([3, 8.0]) text(str("3) condenser (finned): Al ", fin_w, "x", fin_len, "x",
+                                         hp_base_t + fin_h, ", ", n_fins, " fins x", fin_h, "h @ ",
+                                         fin_w/n_fins, " pitch, groove ", hp_w, "x", hp_t),
                                      size = 2.2, valign = "center");
-            translate([3, 3.0]) text(str("heatsink: stock Al ", fin_w, "x", fin_len, "x",
-                                         hp_base_t + fin_h, ", ", n_fins, " fins, groove ",
-                                         hp_w, "x", hp_t, " (pipe epoxied)  ·  1:1 (mm)"),
-                                     size = 2.2, valign = "center");
+            translate([3, 3.4]) text("bends: B1/B3/B4 = 90 in-plane · B2 = z-crank (step back 4.4) · pipe epoxied into both grooves · 1:1 (mm)",
+                                     size = 2.0, valign = "center");
         }
     }
 }
