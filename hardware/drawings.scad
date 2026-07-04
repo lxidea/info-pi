@@ -265,14 +265,20 @@ module cooler_depth() {
             translate([pts[i][0],   EZ(pts[i][1]) + hp_t/2])   circle(d = hp_t);
             translate([pts[i+1][0], EZ(pts[i+1][1]) + hp_t/2]) circle(d = hp_t);
         }
-    // SoC-end stack (bottom→top): chip · pipe flat end · hold-down clamp.
-    // The pipe end is sandwiched BETWEEN the chip and the clamp.
-    rect_outline(soc_gx - 5, EZ(hp_z_front) - 1.6, 10, 1.6);       // SoC die (chip)
-    rect_outline(soc_gx - 7, EZ(hp_z_front), 14, hp_t);           // flattened pad on chip
-    rect_outline(soc_gx - 7, EZ(hp_z_front + hp_t), 14, 1);       // 吸热盘 clamp on top
-    leader(soc_gx - 5, EZ(hp_z_front) - 0.8, soc_gx - 20, EZ(hp_z_front) - 5, "SoC die");
-    leader(soc_gx + 7, EZ(hp_z_front + hp_t) + 0.5, soc_gx + 20, EZ(hp_z_front) + 9,
-           "hold-down clamp (pipe pressed onto chip)");
+    // SoC-end stack (XZ cross-section): chip · 6mm pipe · clamp bracket.
+    // The clamp's groove cradles the pipe; its shoulders reach the PCB. The
+    // pipe (6x3, NOT a wide plate) is sandwiched between chip and clamp.
+    zf = EZ(hp_z_front);
+    zpcb = EZ(back_wall + board_back_gap + pcb_nom_t);
+    ctop = zf + hp_t + 1;
+    rect_outline(soc_gx - 5, zf - 1.6, 10, 1.6);                  // SoC die (chip)
+    rect_outline(soc_gx - hp_w/2, zf, hp_w, hp_t);               // heat pipe 6x3 on die
+    rect_outline(soc_gx - 7, zpcb, 4, ctop - zpcb);             // clamp left shoulder
+    rect_outline(soc_gx + 3, zpcb, 4, ctop - zpcb);             // clamp right shoulder
+    rect_outline(soc_gx - 7, zf + hp_t, 14, 1);                 // clamp ceiling over groove
+    leader(soc_gx - 5, zf - 0.8, soc_gx - 21, zf - 5, "SoC die");
+    leader(soc_gx + 7, ctop - 0.5, soc_gx + 21, zf + 9,
+           "clamp: groove holds 6mm pipe on chip");
     // heatsink base + fins in elevation
     hb_x = fin_cx - fin_w/2;
     rect_outline(hb_x, EZ(hp_z_back), fin_w, hp_base_t);
@@ -374,9 +380,9 @@ module cooler_sheet() {
             rect_outline(0, 0, 176, 22);
             translate([3, 17.5]) text("INFO-PI  |  HEAT-PIPE COOLER — 3 parts (DIY kit, no CNC / no solder)",
                                       size = 3.0, valign = "center");
-            translate([3, 12.6]) text(str("1) hold-down clamp 14x14x1 (presses pipe onto SoC)   ·   2) heat pipe O6 -> flat ",
+            translate([3, 12.6]) text(str("1) hold-down clamp 14x14 (grooved, cradles pipe onto SoC)   ·   2) heat pipe O6 -> flat ",
                                           hp_w, "x", hp_t, ", developed ~", round(hp_dev), " mm"),
-                                      size = 2.2, valign = "center");
+                                      size = 2.1, valign = "center");
             translate([3, 8.0]) text(str("3) condenser (finned): Al ", fin_w, "x", fin_len, "x",
                                          hp_base_t + fin_h, ", ", n_fins, " fins x", fin_h, "h @ ",
                                          fin_w/n_fins, " pitch, groove ", hp_w, "x", hp_t),
