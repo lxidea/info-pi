@@ -221,9 +221,9 @@ module cooler_plan() {
     // pipe body outline + centreline
     outline2d() pipe_path2d();
     pipe_centerline();
-    // 吸热端 cold plate (separate finless block) + its pipe-seat groove
+    // 吸热盘 hold-down clamp footprint (14x14) sitting OVER the pipe's flat
+    // end; the pipe (drawn by pipe_path2d) passes underneath onto the SoC.
     rect_outline(soc_gx - 7, soc_gy - 7, 14, 14);
-    rect_outline(soc_gx - hp_w/2, soc_gy - 7, hp_w, 14);       // pipe groove
     // heatsink block footprint + groove + fin lines
     hb_x = fin_cx - fin_w/2;
     rect_outline(hb_x, fin_y0, fin_w, fin_len);
@@ -245,7 +245,7 @@ module cooler_plan() {
     bend_flag(hp_nodes[3], hp_x_turn - 20, hp_lane_y - 4, "B3 90");
     bend_flag(hp_nodes[4], hp_x_turn - 20, hp_y_into + 6, "B4 90");
     leader(soc_gx, soc_gy, soc_gx + 10, soc_gy - 15,
-           str("cold plate 14x14 (evaporator, separate, no fins)"));
+           str("hold-down clamp 14x14 (over pipe, presses onto SoC)"));
     leader(fin_cx - fin_w/4, hp_y_into, fin_cx + 6, hp_y_into - 12,
            str("groove ", hp_w, "x", hp_t, " (pipe epoxied)"));
 }
@@ -257,16 +257,22 @@ module cooler_depth() {
     function EZ(z) = bz + z*zs;
     // back-cover wall slab (ground reference)
     color("black") rect_outline(soc_gx - 12, EZ(0), (fin_cx+18) - (soc_gx-12), back_wall);
-    // pipe as a 3mm(hp_t)-thick band along X at z_front then z_back
+    // pipe as a 3mm(hp_t)-thick band along X (bottom on z_front then z_back)
     pts = [ [soc_gx, hp_z_front], [hp_x_drop, hp_z_front],
             [hp_x_drop, hp_z_back], [fin_cx, hp_z_back] ];
     for (i = [0 : len(pts)-2])
         hull() {
-            translate([pts[i][0],   EZ(pts[i][1])])   circle(d = hp_t);
-            translate([pts[i+1][0], EZ(pts[i+1][1])]) circle(d = hp_t);
+            translate([pts[i][0],   EZ(pts[i][1]) + hp_t/2])   circle(d = hp_t);
+            translate([pts[i+1][0], EZ(pts[i+1][1]) + hp_t/2]) circle(d = hp_t);
         }
-    // 吸热端 cold plate — a separate 14-wide block BELOW the pipe, on the SoC
-    rect_outline(soc_gx - 7, EZ(hp_z_front - 3), 14, 3);
+    // SoC-end stack (bottom→top): chip · pipe flat end · hold-down clamp.
+    // The pipe end is sandwiched BETWEEN the chip and the clamp.
+    rect_outline(soc_gx - 5, EZ(hp_z_front) - 1.6, 10, 1.6);       // SoC die (chip)
+    rect_outline(soc_gx - 7, EZ(hp_z_front), 14, hp_t);           // flattened pad on chip
+    rect_outline(soc_gx - 7, EZ(hp_z_front + hp_t), 14, 1);       // 吸热盘 clamp on top
+    leader(soc_gx - 5, EZ(hp_z_front) - 0.8, soc_gx - 20, EZ(hp_z_front) - 5, "SoC die");
+    leader(soc_gx + 7, EZ(hp_z_front + hp_t) + 0.5, soc_gx + 20, EZ(hp_z_front) + 9,
+           "hold-down clamp (pipe pressed onto chip)");
     // heatsink base + fins in elevation
     hb_x = fin_cx - fin_w/2;
     rect_outline(hb_x, EZ(hp_z_back), fin_w, hp_base_t);
@@ -274,7 +280,8 @@ module cooler_depth() {
     for (i = [0 : n_fins-1])
         rect_outline(hb_x + i*pitch + pitch/2 - fin_t/2, EZ(hp_z_back) + hp_base_t, fin_t, fin_h);
     // dims
-    vdim(EZ(0), EZ(hp_z_front), soc_gx - 7, soc_gx - 16, str("h", hp_z_front));
+    vdim(EZ(0), EZ(hp_z_front + hp_t + 1), soc_gx - 7, soc_gx - 16,
+         str("stack top ", hp_z_front + hp_t + 1, " (screen back ~11)"));
     vdim(EZ(hp_z_back), EZ(hp_z_front), hp_x_drop, hp_x_drop + 14,
          str("drop ", hp_z_front - hp_z_back));
     vdim(EZ(hp_z_back), EZ(hp_z_back + hp_base_t + fin_h), fin_cx + fin_w/2,
@@ -367,7 +374,7 @@ module cooler_sheet() {
             rect_outline(0, 0, 176, 22);
             translate([3, 17.5]) text("INFO-PI  |  HEAT-PIPE COOLER — 3 parts (DIY kit, no CNC / no solder)",
                                       size = 3.0, valign = "center");
-            translate([3, 12.6]) text(str("1) cold plate 14x14x3 evaporator (finless, on SoC)   ·   2) heat pipe O6 -> flat ",
+            translate([3, 12.6]) text(str("1) hold-down clamp 14x14x1 (presses pipe onto SoC)   ·   2) heat pipe O6 -> flat ",
                                           hp_w, "x", hp_t, ", developed ~", round(hp_dev), " mm"),
                                       size = 2.2, valign = "center");
             translate([3, 8.0]) text(str("3) condenser (finned): Al ", fin_w, "x", fin_len, "x",

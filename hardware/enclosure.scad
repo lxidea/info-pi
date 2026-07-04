@@ -1036,10 +1036,14 @@ module heat_pipe_model() {
     x_drop  = side_wall + 10 + pi_short + 8;          // ≈ 50, clear of Pi/ports
     x_turn  = fan_cx - fan_w/2 - 5;                   // ≈ 115, left of the fan
     y_into  = fin_y0 + 3;                             // enters fin base
-    // NOTE: the SoC-end thermal interface is a SEPARATE part — the 吸热端
-    // cold plate (evaporator_block). The pipe's flat end nests in that
-    // plate's groove; the pipe itself (below) is just the bent 6x3 tube.
+    // The pipe's flattened WIDE end lies DIRECTLY on the SoC die — this face
+    // is the thermal interface to the chip. The 吸热盘 hold-down clamp
+    // (evaporator_block) presses down on TOP of it, so the pipe end is
+    // sandwiched BETWEEN the clamp and the chip.
     color([0.80, 0.52, 0.30]) {
+        // flattened evaporator pad on the SoC die
+        translate([soc_gx - 7, soc_gy - 7, z_front])
+            cube([14, 14, hp_t]);
         // vertical jog: the SoC sits in the HDMI band (y≈28), so first climb
         // to the connector-free crossing lane (y≈36) — done at x≈27, well
         // LEFT of the connectors (x40-48), so it touches nothing
@@ -1068,30 +1072,27 @@ module heat_pipe_model() {
     color("SaddleBrown")
         translate([soc_gx + 6, soc_gy - 11, z_front + hp_t + 0.1])
             linear_extrude(0.4)
-                text("heat pipe (bent 6x3): cold plate -> finned condenser",
+                text("heat pipe: flat end on SoC (under clamp) -> condenser",
                      size = 2.2, halign = "center");
 }
 
-// 吸热端 — COLD PLATE / EVAPORATOR (no fins). A SEPARATE finless block
-// clamped on the SoC die; the heat pipe's flat end nests in a shallow
-// groove on its top face. This is the heat-ABSORBING exchanger; the
-// finned block (fin_stack_model) is the heat-REJECTING one.
+// 吸热盘 — HOLD-DOWN CLAMP PLATE (no fins). Presses down on TOP of the
+// heat pipe's flattened end, so the pipe is clamped BETWEEN this plate and
+// the SoC chip: chip → pipe flat end → clamp. It is thin because the
+// enclosure depth is nearly maxed here — chip + pipe already reach z≈10 and
+// the screen back sits at z≈11, so the clamp is a ~1mm hold-down bracket,
+// not a thick spreader. A SEPARATE part from the pipe and the condenser.
 module evaporator_block() {
-    z_front = back_wall + board_back_gap + 1.4 + 1.5;   // pipe evaporator plane ≈ 6.9
-    eb_w = 14; eb_t = 3;                                 // 14x14 footprint, 3mm body
-    z0 = z_front - eb_t;                                 // sits on the SoC die
-    color([0.72, 0.45, 0.20])
-        difference() {
-            translate([soc_gx - eb_w/2, soc_gy - eb_w/2, z0]) cube([eb_w, eb_w, eb_t]);
-            // shallow pipe-seat groove on top (runs along y — the pipe's jog dir)
-            translate([soc_gx - hp_w/2, soc_gy - eb_w/2 - 0.1, z_front - 1.2])
-                cube([hp_w, eb_w + 0.2, 1.4]);
-        }
+    z_front = back_wall + board_back_gap + 1.4 + 1.5;   // die top / pipe bottom ≈ 6.9
+    eb_w = 14; eb_t = 1;                                 // 14x14 footprint, 1mm thin
+    z0 = z_front + hp_t;                                 // sits ON the pipe's flat end (≈9.9)
+    color([0.70, 0.70, 0.74])
+        translate([soc_gx - eb_w/2, soc_gy - eb_w/2, z0]) cube([eb_w, eb_w, eb_t]);
     if (is_undef(NO_LABELS))
-        color("SaddleBrown")
-            translate([soc_gx, soc_gy - eb_w/2 - 3, z_front + 0.1])
+        color("SteelBlue")
+            translate([soc_gx, soc_gy - eb_w/2 - 3, z0 + eb_t + 0.1])
                 linear_extrude(0.4)
-                    text("cold plate (evaporator, no fins)", size = 2.2, halign = "center");
+                    text("hold-down clamp (presses pipe onto SoC)", size = 2.2, halign = "center");
 }
 
 // STOCK extruded-aluminium heatsink (off-the-shelf, e.g. a 30mm-wide
