@@ -175,6 +175,13 @@ bash hardware/export.sh
 | `<part>_plan.dxf` | CAM / 激光切割轮廓 |
 | `<part>_{plan,front,side}.svg` | 单独的三视图轮廓（矢量）|
 
+**散热组件（热管 + 散热器）** 是 DIY 套件（现成扁平热管弯折 + 现成铝挤散热器，无 CNC / 无焊接），因此不是三视图而是**弯管 / 走线图**：
+
+| 文件 | 用途 |
+|------|------|
+| `heat_pipe_cooler_DIM.pdf` / `.svg` | 弯管模板：各段长度、4 处弯折（B1/B3/B4 = 90°，B2 = Z 向台阶）、蒸发器压块 14×14、Z-drop 深度剖面（6.9→2.5）、散热器挤型剖面（30×18×7.5，9 片鳍，6×3 凹槽）、展开长度 ~128mm + 下料长度 |
+| `heat_pipe_cooler.stl` | 装配 3D 参考（无文字标签；非打印件）|
+
 图纸尺寸由 `drawings.scad` 通过 `include <enclosure.scad>` 直接复用模型常量——**改模型、重跑 export.sh，图纸自动同步**。
 
 ## 渲染和导出
