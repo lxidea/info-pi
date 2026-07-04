@@ -138,7 +138,18 @@ hdmi_plug_clearance = 0;
 front_wall = 2;     // front bezel thickness
 back_wall = 2;      // back cover thickness
 side_wall = 2;      // side wall thickness
-inner_depth = screen_t + back_clearance + max(board_t, pi_t) + hdmi_plug_clearance;
+// Cooler depth drivers (defined EARLY — inner_depth below references them;
+// OpenSCAD won't forward-resolve, so they must precede it). The full fan
+// parameter block lives lower down and reuses these.
+enable_fan = true;        // master switch for the whole cooler
+fan_intake_gap = 1;       // gap from fan back face to back cover (intake)
+fan_t = 10;               // blower thickness (4010 = 10mm) — drives depth
+
+// Cavity depth behind the screen must fit the DEEPEST component — either the
+// board stack (PCB + front-facing parts) or the blower stack (intake gap +
+// fan body + 1mm screen clearance). With a thick blower the fan governs.
+inner_depth = screen_t + max(back_clearance + max(board_t, pi_t) + hdmi_plug_clearance,
+                             enable_fan ? fan_intake_gap + fan_t + 1 : 0);
 total_w = screen_w + 2 * (bezel_inset + side_wall);
 total_h = screen_h + 2 * (bezel_inset + side_wall);
 total_d = front_wall + inner_depth + back_wall;
@@ -298,7 +309,7 @@ enable_sd_slot = true;
 //
 // Speed is controlled by the Pi: a PWM GPIO drives an N-MOSFET low-side
 // switch on the fan's GND lead (wiring documented in README).
-enable_fan = true;        // master switch for the whole cooler
+// (enable_fan is defined earlier — inner_depth needs it.)
 
 // Flattened heat pipe (off-the-shelf, bent to shape)
 hp_w = 6;                 // pipe width  (flattened from Ø6 round)
@@ -308,23 +319,22 @@ hp_lane_y = 36;           // horizontal-run y: clear cavity-CENTRE lane
 
 // Condenser fin stack (dead centre of the cavity, between VESA columns)
 fin_cx = 135;             // fin block centre x (clear of VESA posts 99/174)
-fin_w = 30;               // x extent (across the airflow)
-fin_y0 = 41;              // fins start just above the blower nozzle
+fin_w = 36;               // x extent (across the airflow) — matches wider blower
+fin_y0 = 45;              // fins start just above the taller (40mm) blower
 fin_len = 18;             // y extent (the airflow direction)
-fin_h = 6.5;              // z height — capped by the 17mm-deep enclosure:
-                          // base top z≈4, screen back z≈11, so ~6.5 is the
-                          // practical max (fin tip z≈10.5, ~0.5 screen gap)
+fin_h = 9;                // z height — deeper enclosure (20mm) lets the fins
+                          // span the 10mm blower height: base top z≈4, fin
+                          // tip z≈13 (fan top), screen back z≈14 (~1mm gap)
 fin_t = 0.8;              // fin plate thickness
-n_fins = 15;              // denser plate-fin count (pitch = fin_w/n_fins = 2mm)
+n_fins = 18;              // denser plate-fin count (pitch = fin_w/n_fins = 2mm)
 
-// Blower (3007/3004) — in the clear centre strip, below the fins, +y
-fan_w = 30;               // 30×30 body footprint
-fan_t = 7;                // 3007 = 7mm; set 4 for a 3004
-fan_cx = 135;             // centred under the fin stack (clear of VESA)
-fan_cy = 24;              // body y ≈ 9..39, tangential nozzle on top edge
-fan_intake_gap = 1;       // gap from fan back face to back cover (intake)
-fan_nozzle_w = 14;        // tangential outlet width feeding the fins
-fan_grille_d = 24;        // intake grille outer diameter (impeller eye)
+// Blower (4010) — in the clear centre strip, below the fins, +y.
+// (fan_t and fan_intake_gap are defined earlier — inner_depth needs them.)
+fan_w = 40;               // 40×40 body footprint (4010)
+fan_cx = 135;             // centred under the fin stack (clear of VESA 99/174)
+fan_cy = 24;              // body y ≈ 4..44, tangential nozzle on top edge
+fan_nozzle_w = 20;        // tangential outlet width feeding the fins
+fan_grille_d = 32;        // intake grille outer diameter (impeller eye)
 fan_grille_rings = 3;     // concentric slot rings
 fan_grille_rib = 1.2;     // solid rib between slots (dust + strength)
 fan_screw_d = 2.2;        // M2 self-tap into the 2 diagonal mount posts
