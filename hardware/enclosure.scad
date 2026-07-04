@@ -28,6 +28,16 @@ screen_t = 4;
 // How much of the screen edge the front bezel covers (must hide LCD bezel)
 bezel_inset = 2;   // mm inward from screen edge (assumed until AA is known)
 
+// Screen retention snap-clips on the front frame's two LONG edges: the LCD
+// loads from behind, its back edge cams past the clips' lead-in ramps, and
+// the clips' retaining faces trap it against the bezel ledge (no adhesive
+// needed). Overhang is small so the glass presses in with a slight flex.
+screen_clip_n    = 3;     // clips per long edge
+screen_clip_w    = 8;     // clip width along the edge
+screen_clip_ov   = 1.0;   // overhang over the glass back edge
+screen_clip_t    = 1.2;   // retaining-face thickness (z)
+screen_clip_ramp = 1.8;   // lead-in ramp height (z) for insertion
+
 // Driver board dimensions (HM-V1.0B)
 board_w = 72;
 board_h = 49;
@@ -368,6 +378,31 @@ module join_bosses() {
     }
 }
 
+// Screen retention snap-clips: small ramped hooks on the two long edges of
+// the glass pocket. Retaining face sits at the glass BACK plane and overhangs
+// the glass edge; a lead-in ramp on the cavity side lets the panel press in.
+module screen_clips() {
+    sx = (total_w - screen_w) / 2;
+    sy = (total_h - screen_h) / 2;
+    zb = front_wall + screen_t;                    // glass back plane
+    module hook(x0, ywall, dir) {
+        y0 = min(ywall, ywall + dir * screen_clip_ov);
+        translate([x0, y0, zb])                    // retaining bar (overhangs glass)
+            cube([screen_clip_w, screen_clip_ov, screen_clip_t]);
+        hull() {                                   // lead-in ramp behind it
+            translate([x0, y0, zb + screen_clip_t])
+                cube([screen_clip_w, screen_clip_ov, 0.01]);
+            translate([x0, ywall - 0.005, zb + screen_clip_t + screen_clip_ramp])
+                cube([screen_clip_w, 0.01, 0.01]);
+        }
+    }
+    for (i = [0 : screen_clip_n - 1]) {
+        x0 = sx + screen_w * (i + 1) / (screen_clip_n + 1) - screen_clip_w / 2;
+        hook(x0, sy, +1);                          // bottom long edge (protrude +y)
+        hook(x0, sy + screen_h, -1);               // top long edge (protrude -y)
+    }
+}
+
 module front_frame() {
     shell_depth = front_wall + inner_depth + 2;
     difference() {
@@ -531,9 +566,10 @@ module front_frame() {
             }
         }
     }
-    // Corner join bosses — added OUTSIDE the difference so the cavity cut
-    // above doesn't remove them.
+    // Corner join bosses + screen retention clips — added OUTSIDE the
+    // difference so the cavity cut above doesn't remove them.
     join_bosses();
+    screen_clips();
 }
 
 // ─── Back cover ───────────────────────────────────────────
@@ -1203,7 +1239,7 @@ module fin_stack_model() {
 // ─── Render selector ──────────────────────────────────────
 // Set `part` to render one of the parts at a time
 
-part = "all";  // "front" | "back" | "wall" | "all" | "preview"
+part = "preview";  // "front" | "back" | "wall" | "all" | "preview"
 
 // ─── Per-part export plumbing (non-breaking; driven by -D on the CLI) ──
 // STL (3D, for FDM/CAM):   openscad -o front.stl -D 'part="front"' ...
