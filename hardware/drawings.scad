@@ -221,8 +221,8 @@ module cooler_plan() {
     // pipe body outline + centreline
     outline2d() pipe_path2d();
     pipe_centerline();
-    // 吸热盘 hold-down clamp footprint (14x14) sitting OVER the pipe's flat
-    // end; the pipe (drawn by pipe_path2d) passes underneath onto the SoC.
+    // 吸热盘 cold-plate footprint (14x14); the 6mm pipe (pipe_path2d) is
+    // embedded in a groove in its bottom, flush, running along y here.
     rect_outline(soc_gx - 7, soc_gy - 7, 14, 14);
     // heatsink block footprint + groove + fin lines
     hb_x = fin_cx - fin_w/2;
@@ -245,7 +245,7 @@ module cooler_plan() {
     bend_flag(hp_nodes[3], hp_x_turn - 20, hp_lane_y - 4, "B3 90");
     bend_flag(hp_nodes[4], hp_x_turn - 20, hp_y_into + 6, "B4 90");
     leader(soc_gx, soc_gy, soc_gx + 10, soc_gy - 15,
-           str("hold-down clamp 14x14 (over pipe, presses onto SoC)"));
+           str("cold plate 14x14 (pipe embedded flush in bottom groove)"));
     leader(fin_cx - fin_w/4, hp_y_into, fin_cx + 6, hp_y_into - 12,
            str("groove ", hp_w, "x", hp_t, " (pipe epoxied)"));
 }
@@ -265,20 +265,21 @@ module cooler_depth() {
             translate([pts[i][0],   EZ(pts[i][1]) + hp_t/2])   circle(d = hp_t);
             translate([pts[i+1][0], EZ(pts[i+1][1]) + hp_t/2]) circle(d = hp_t);
         }
-    // SoC-end stack (XZ cross-section): chip · 6mm pipe · clamp bracket.
-    // The clamp's groove cradles the pipe; its shoulders reach the PCB. The
-    // pipe (6x3, NOT a wide plate) is sandwiched between chip and clamp.
+    // SoC-end stack (XZ cross-section): chip · cold plate with the 6mm pipe
+    // embedded FLUSH in its bottom groove. Pipe bottom + plate bottom are
+    // coplanar → one continuous contact plane on the die (no air gap).
     zf = EZ(hp_z_front);
-    zpcb = EZ(back_wall + board_back_gap + pcb_nom_t);
-    ctop = zf + hp_t + 1;
-    rect_outline(soc_gx - 5, zf - 1.6, 10, 1.6);                  // SoC die (chip)
-    rect_outline(soc_gx - hp_w/2, zf, hp_w, hp_t);               // heat pipe 6x3 on die
-    rect_outline(soc_gx - 7, zpcb, 4, ctop - zpcb);             // clamp left shoulder
-    rect_outline(soc_gx + 3, zpcb, 4, ctop - zpcb);             // clamp right shoulder
-    rect_outline(soc_gx - 7, zf + hp_t, 14, 1);                 // clamp ceiling over groove
+    ctop = zf + hp_t + 1;                                        // cold-plate top
+    rect_outline(soc_gx - 5, zf - 1.6, 10, 1.6);                 // SoC die (chip)
+    rect_outline(soc_gx - hp_w/2, zf, hp_w, hp_t);              // heat pipe 6x3, flush bottom
+    rect_outline(soc_gx - 7, zf, 4, hp_t);                     // plate rail (left of groove)
+    rect_outline(soc_gx + 3, zf, 4, hp_t);                     // plate rail (right of groove)
+    rect_outline(soc_gx - 7, zf + hp_t, 14, 1);                // plate top (over the pipe)
+    hline(soc_gx - 9, soc_gx + 9, zf);                          // emphasise the flush plane
     leader(soc_gx - 5, zf - 0.8, soc_gx - 21, zf - 5, "SoC die");
-    leader(soc_gx + 7, ctop - 0.5, soc_gx + 21, zf + 9,
-           "clamp: groove holds 6mm pipe on chip");
+    leader(soc_gx - 9, zf, soc_gx - 24, zf + 4, "flush contact plane");
+    leader(soc_gx + 7, ctop - 0.5, soc_gx + 22, zf + 9,
+           "cold plate (pipe embedded flush in bottom)");
     // heatsink base + fins in elevation
     hb_x = fin_cx - fin_w/2;
     rect_outline(hb_x, EZ(hp_z_back), fin_w, hp_base_t);
@@ -380,7 +381,7 @@ module cooler_sheet() {
             rect_outline(0, 0, 176, 22);
             translate([3, 17.5]) text("INFO-PI  |  HEAT-PIPE COOLER — 3 parts (DIY kit, no CNC / no solder)",
                                       size = 3.0, valign = "center");
-            translate([3, 12.6]) text(str("1) hold-down clamp 14x14 (grooved, cradles pipe onto SoC)   ·   2) heat pipe O6 -> flat ",
+            translate([3, 12.6]) text(str("1) cold plate 14x14 (pipe embedded flush in bottom)   ·   2) heat pipe O6 -> flat ",
                                           hp_w, "x", hp_t, ", developed ~", round(hp_dev), " mm"),
                                       size = 2.1, valign = "center");
             translate([3, 8.0]) text(str("3) condenser (finned): Al ", fin_w, "x", fin_len, "x",

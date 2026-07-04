@@ -1036,11 +1036,11 @@ module heat_pipe_model() {
     x_drop  = side_wall + 10 + pi_short + 8;          // ≈ 50, clear of Pi/ports
     x_turn  = fan_cx - fan_w/2 - 5;                   // ≈ 115, left of the fan
     y_into  = fin_y0 + 3;                             // enters fin base
-    // The pipe's flattened end (still ~6mm wide — a Ø6 tube pressed flat, NOT
-    // a wide plate) lies DIRECTLY on the SoC die; this is the thermal
-    // interface. The 吸热盘 hold-down clamp (evaporator_block) has a groove
-    // that cradles this 6mm pipe and presses it down onto the chip, so the
-    // pipe is sandwiched BETWEEN the clamp and the chip.
+    // The pipe stays ~6mm wide (a Ø6 tube pressed flat, NOT a wide plate).
+    // Over the SoC it embeds into a groove in the BOTTOM of the 吸热盘 cold
+    // plate (evaporator_block), flush with the plate's bottom face — so the
+    // pipe bottom and the plate metal form one continuous contact plane on
+    // the die. This same flat face is the thermal interface to the chip.
     color([0.80, 0.52, 0.30]) {
         // vertical jog: the SoC sits in the HDMI band (y≈28), so first climb
         // to the connector-free crossing lane (y≈36) — done at x≈27, well
@@ -1074,31 +1074,30 @@ module heat_pipe_model() {
                      size = 2.2, halign = "center");
 }
 
-// 吸热盘 — HOLD-DOWN CLAMP BRACKET (no fins). A small bracket over the SoC
-// with a groove on its underside that cradles the flattened 6mm heat pipe
-// and presses it down onto the die: chip → pipe → clamp. Its shoulders
-// (either side of the groove) reach down to the PCB so screws can pull it
-// tight. Thin overall — chip+pipe already reach z≈10 and the screen back
-// sits at z≈11. A SEPARATE part from the pipe and the condenser.
+// 吸热盘 — COLD-PLATE BASE with a DIRECT-CONTACT (embedded) heat pipe. The
+// flattened 6mm pipe is let into a groove in the BOTTOM of the plate and
+// sits FLUSH with the plate's bottom face, so pipe + plate metal form ONE
+// continuous flat plane on the SoC — no air gap, maximum heat transfer.
+// The plate wraps the pipe (sides + a thin top) and its whole bottom is the
+// contact surface. Thin overall — chip+pipe reach z≈10, screen back z≈11.
+// A SEPARATE part from the pipe and the condenser.
 module evaporator_block() {
-    z_front = back_wall + board_back_gap + 1.4 + 1.5;   // die top / pipe bottom ≈ 6.9
-    z_pcb   = back_wall + board_back_gap + pcb_nom_t;    // PCB component face ≈ 5.5
-    eb_w = 14; eb_l = 14;                                // footprint
-    pipe_top = z_front + hp_t;                           // ≈ 9.9
-    clamp_top = pipe_top + 1;                            // 1mm ceiling over the pipe ≈ 10.9
-    color([0.70, 0.70, 0.74])
+    z_front = back_wall + board_back_gap + 1.4 + 1.5;   // SoC-contact plane ≈ 6.9
+    eb_w = 14; eb_l = 14; eb_h = hp_t + 1;              // block; top ≈ 10.9
+    color([0.74, 0.74, 0.78])
         difference() {
-            translate([soc_gx - eb_w/2, soc_gy - eb_l/2, z_pcb])
-                cube([eb_w, eb_l, clamp_top - z_pcb]);
-            // underside groove that cradles the 6mm pipe (runs along y)
-            translate([soc_gx - hp_w/2 - 0.25, soc_gy - eb_l/2 - 0.1, z_pcb - 0.1])
-                cube([hp_w + 0.5, eb_l + 0.2, pipe_top - z_pcb + 0.1]);
+            translate([soc_gx - eb_w/2, soc_gy - eb_l/2, z_front]) cube([eb_w, eb_l, eb_h]);
+            // BOTTOM groove: the pipe embeds here flush with the plate bottom
+            // (groove = pipe section exactly, so the two metals abut, no gap)
+            translate([soc_gx - hp_w/2, soc_gy - eb_l/2 - 0.1, z_front - 0.1])
+                cube([hp_w, eb_l + 0.2, hp_t + 0.1]);
         }
     if (is_undef(NO_LABELS))
         color("SteelBlue")
-            translate([soc_gx, soc_gy - eb_l/2 - 3, clamp_top + 0.1])
+            translate([soc_gx, soc_gy - eb_l/2 - 3, z_front + eb_h + 0.1])
                 linear_extrude(0.4)
-                    text("hold-down clamp (groove cradles pipe onto SoC)", size = 2.2, halign = "center");
+                    text("cold plate: pipe embedded flush in bottom (1-plane contact)",
+                         size = 2.0, halign = "center");
 }
 
 // STOCK extruded-aluminium heatsink (off-the-shelf, e.g. a 30mm-wide
