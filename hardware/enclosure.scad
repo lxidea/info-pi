@@ -190,6 +190,24 @@ mount_spacing_y = 35;     // pattern height (smaller to fit 80mm height)
 mount_post_h = 4;          // boss height for heat-set insert
 mount_insert_d = 4.0;      // hole for M3 heat-set insert (3.5mm taper)
 
+// ── Front↔back join: 4 corner screw bosses in the FRONT frame; the BACK
+// cover has matching countersunk clearance holes. Screw goes in from the
+// back and self-taps into the boss, pulling the two shells together. The
+// 4 positions are symmetric so they mate the same whichever way the cover
+// flips, and all sit in the board-free corners (Pi x12-42, driver x199-271).
+join_screw_d = 3.0;        // M3 join screws (self-tap into the plastic boss)
+join_boss_d  = 7.0;        // boss outer diameter
+join_pilot_d = 2.6;        // self-tap pilot bore in the boss
+join_cbore_d = 6.4;        // countersink (screw-head) diameter on back outer face
+join_inset_x = 7;          // boss centre inset from the L/R edges
+join_inset_y = 6.5;        // boss centre inset from the top/bottom edges
+join_positions = [
+    [join_inset_x,            join_inset_y],
+    [join_inset_x,            total_h - join_inset_y],
+    [total_w - join_inset_x,  join_inset_y],
+    [total_w - join_inset_x,  total_h - join_inset_y],
+];
+
 // Cable cutout (bottom edge of the enclosure)
 // Just the 1× Type-C POWER cable — the HDMI is internal (Pi→driver), so no
 // HDMI strain relief is needed here. A USB-C plug is ~8.5mm wide; 16mm gives
@@ -324,6 +342,29 @@ module rounded_rect(w, h, r, depth) {
 }
 
 // ─── Front frame ──────────────────────────────────────────
+
+// Corner screw bosses that tie the back cover to the front frame. Each
+// boss stands on the front wall and rises to the back opening plane; two
+// thin webs tie it to the adjacent side walls for rigidity. A blind pilot
+// is bored from the back opening so an M3 screw self-taps in.
+module join_bosses() {
+    h = inner_depth + 2;                 // front wall top → back opening plane
+    rib_t = 1.8;
+    for (p = join_positions) {
+        px = p[0]; py = p[1];
+        wx = (px < total_w/2) ? side_wall : total_w - side_wall;   // nearest x wall
+        wy = (py < total_h/2) ? side_wall : total_h - side_wall;   // nearest y wall
+        translate([0, 0, front_wall]) {
+            translate([px, py, 0]) difference() {
+                cylinder(d = join_boss_d, h = h, $fn = 32);
+                translate([0, 0, 2])                 // blind: 2mm solid at the base
+                    cylinder(d = join_pilot_d, h = h, $fn = 20);
+            }
+            translate([min(px, wx), py - rib_t/2, 0]) cube([abs(px - wx), rib_t, h]); // web→x wall
+            translate([px - rib_t/2, min(py, wy), 0]) cube([rib_t, abs(py - wy), h]); // web→y wall
+        }
+    }
+}
 
 module front_frame() {
     shell_depth = front_wall + inner_depth + 2;
@@ -473,6 +514,9 @@ module front_frame() {
             }
         }
     }
+    // Corner join bosses — added OUTSIDE the difference so the cavity cut
+    // above doesn't remove them.
+    join_bosses();
 }
 
 // ─── Back cover ───────────────────────────────────────────
@@ -504,6 +548,15 @@ module back_cover() {
         // the impeller eye.
         if (enable_fan)
             fan_grille_cut();
+        // Front↔back join: countersunk clearance holes at the 4 corners.
+        // Outer (exposed) face is z=0, so the countersink opens there and
+        // the M3 head sits flush; the shank passes through into the front
+        // frame's boss.
+        for (p = join_positions)
+            translate([p[0], p[1], -0.1]) {
+                cylinder(d = join_screw_d + 0.6, h = back_wall + 0.2, $fn = 24);
+                cylinder(d1 = join_cbore_d, d2 = join_screw_d, h = 1.6, $fn = 28);
+            }
     }
 }
 

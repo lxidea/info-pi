@@ -119,6 +119,9 @@ module face_front() {
     win_h = screen_h - 2*bezel_inset;           // 61
     rrect_outline(total_w, total_h, 4);                 // outer
     rect_outline(win_x, win_y, win_w, win_h);           // display window
+    for (p = join_positions) ring(p[0], p[1], join_boss_d);   // internal corner bosses
+    leader(join_positions[2][0], join_positions[2][1], join_positions[2][0]-14, join_positions[2][1]-7,
+           str("4x internal boss O", join_boss_d, " (M3 self-tap, holds back cover)"));
     hdim(0, total_w, total_h, total_h + 9, str(total_w));
     vdim(win_y, win_y+win_h, win_x, -9, str(win_h));
     hdim(win_x, win_x+win_w, win_y+win_h, total_h + 19, str(win_w));
@@ -132,6 +135,7 @@ module face_back() {
     vy0 = cy - mount_spacing_y/2; vy1 = cy + mount_spacing_y/2;   // 19 / 54
     rrect_outline(total_w, total_h, 4);
     for (hx=[vx0,vx1], hy=[vy0,vy1]) hole_at(hx, hy, mount_insert_d);
+    for (p = join_positions) { hole_at(p[0], p[1], join_screw_d); ring(p[0], p[1], join_cbore_d); }
     translate([fan_cx, fan_cy]) outline2d() grille2d();   // ring-and-spoke intake grille
     hole_at(fan_cx, fan_cy, 4);                            // central hub hole
     ring(fan_cx, fan_cy, fan_grille_d);                   // grille envelope Ø ref
@@ -140,6 +144,8 @@ module face_back() {
     vdim(vy0, vy1, vx0, -9, str(mount_spacing_y));
     hdim(0, fan_cx, 0, -9, str(fan_cx));
     leader(vx1, vy1, vx1+12, vy1+8, str("4x O", mount_insert_d, " (M3 insert)"));
+    leader(join_positions[2][0], join_positions[2][1], join_positions[2][0]-14, join_positions[2][1]-7,
+           str("4x M3 join, csk O", join_cbore_d, " (into front-frame bosses)"));
     leader(fan_cx, fan_cy, fan_cx+20, fan_cy+12,
            str("fan grille O", fan_grille_d, " (", fan_grille_rings, " rings + 4 spokes)"));
 }
