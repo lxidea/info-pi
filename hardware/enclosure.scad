@@ -1115,10 +1115,12 @@ draw2d = false;    // true → emit a flat 2D projection instead of the 3D solid
 view   = "plan";   // "plan" (XY footprint) | "front" (XZ) | "side" (YZ)
 
 module part_solid(p) {
-    if (p == "front")       front_frame();
-    else if (p == "back")   back_cover();
-    else if (p == "wall")   wall_mount();
-    else if (p == "cooler") { heat_pipe_model(); fin_stack_model(); }
+    if (p == "front")         front_frame();
+    else if (p == "back")     back_cover();
+    else if (p == "wall")     wall_mount();
+    else if (p == "pipe")     heat_pipe_model();      // heat pipe alone
+    else if (p == "heatsink") fin_stack_model();      // stock heatsink alone
+    else if (p == "cooler")   { heat_pipe_model(); fin_stack_model(); }
 }
 
 module emit_view(p, v) {
@@ -1141,8 +1143,8 @@ else if (part == "back")
     color("SlateGray") back_cover();
 else if (part == "wall")
     color("LightGray") wall_mount();
-else if (part == "cooler")
-    part_solid("cooler");
+else if (part == "cooler" || part == "pipe" || part == "heatsink")
+    part_solid(part);
 else if (part == "all") {
     color("DimGray") front_frame();
     translate([0, 0, -back_wall - 1])

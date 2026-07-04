@@ -36,11 +36,15 @@ for p in front back wall; do
     openscad -q -o "$OUT/${s}_DIM.svg" -D "sheet=\"$p\"" "$DRW"
 done
 
-# Cooler assembly (heat pipe + stock heatsink). NOT a printed part — the
-# primary output is the bend/routing template (DIM sheet). A label-free STL
-# is also emitted purely as a 3D assembly reference (no plan/side/DXF).
+# Cooler (heat pipe + stock heatsink). NOT a printed part — the primary
+# output is the bend/routing template (DIM sheet). The heat pipe and the
+# heatsink are two SEPARATE physical parts (pipe epoxied into the heatsink
+# groove), so they are emitted as separate label-free reference STLs — a
+# merged mesh can't be told apart. A combined STL is kept for context.
 echo "==> heat_pipe_cooler"
-openscad -q -o "$OUT/heat_pipe_cooler.stl" -D 'part="cooler"' -D NO_LABELS=1 "$SRC"
+openscad -q -o "$OUT/heat_pipe.stl"           -D 'part="pipe"'     -D NO_LABELS=1 "$SRC"
+openscad -q -o "$OUT/heatsink.stl"            -D 'part="heatsink"' -D NO_LABELS=1 "$SRC"
+openscad -q -o "$OUT/heat_pipe_cooler.stl"    -D 'part="cooler"'   -D NO_LABELS=1 "$SRC"
 openscad -q -o "$OUT/heat_pipe_cooler_DIM.svg" -D 'sheet="cooler"' "$DRW"
 
 # Optional: render the dimensioned sheets to print-ready PDF (vector, 1:1).

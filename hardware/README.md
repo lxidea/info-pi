@@ -180,7 +180,8 @@ bash hardware/export.sh
 | 文件 | 用途 |
 |------|------|
 | `heat_pipe_cooler_DIM.pdf` / `.svg` | 弯管模板：各段长度、4 处弯折（B1/B3/B4 = 90°，B2 = Z 向台阶）、蒸发器压块 14×14、Z-drop 深度剖面（6.9→2.5）、散热器挤型剖面（30×18×7.5，9 片鳍，6×3 凹槽）、展开长度 ~128mm + 下料长度 |
-| `heat_pipe_cooler.stl` | 装配 3D 参考（无文字标签；非打印件）|
+| `heat_pipe.stl` / `heatsink.stl` | 热管、散热器**分开**的 3D 参考（两个独立零件，无标签；非打印件）|
+| `heat_pipe_cooler.stl` | 两者合并的装配参考 |
 
 图纸尺寸由 `drawings.scad` 通过 `include <enclosure.scad>` 直接复用模型常量——**改模型、重跑 export.sh，图纸自动同步**。
 
