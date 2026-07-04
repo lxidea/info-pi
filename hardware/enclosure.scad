@@ -371,15 +371,27 @@ module front_frame() {
     difference() {
         // Outer shell
         rounded_rect(total_w, total_h, 4, shell_depth);
-        // Display window (visible area)
+        // ── Display VIEWING OPENING — cut THROUGH the front bezel so the
+        //    LCD's active area is actually visible. It is smaller than the
+        //    glass, so the bezel overhangs the glass edge by bezel_inset:
+        //    that overhang is the LEDGE the panel seats/bonds against from
+        //    behind. (Previously this cube started at z=front_wall, i.e.
+        //    BEHIND the face — the front stayed solid and the screen had
+        //    nowhere to show. It now breaches the face from z=-1.)
         translate([side_wall + bezel_inset,
                    side_wall + bezel_inset,
-                   front_wall])
+                   -1])
             cube([screen_w - 2*bezel_inset,
                   screen_h - 2*bezel_inset,
-                  screen_t + 10]);
-        // Inner cavity (back removed for cover)
+                  front_wall + 1]);          // through the bezel only (z -1 → front_wall)
+        // ── Glass seat recess — the LCD module (full glass footprint) drops
+        //    in from behind and seats against the bezel ledge; walls locate
+        //    it in X/Y. Opening is inset by bezel_inset, so the glass edge
+        //    overhangs under the bezel by that much. Depth = screen_t.
         translate([side_wall, side_wall, front_wall])
+            cube([screen_w, screen_h, screen_t + 0.4]);
+        // Inner cavity (electronics; open to the back for the cover)
+        translate([side_wall, side_wall, front_wall + screen_t])
             cube([total_w - 2*side_wall,
                   total_h - 2*side_wall,
                   inner_depth + 5]);
@@ -1186,7 +1198,7 @@ module fin_stack_model() {
 // ─── Render selector ──────────────────────────────────────
 // Set `part` to render one of the parts at a time
 
-part = "preview";  // "front" | "back" | "wall" | "all" | "preview"
+part = "all";  // "front" | "back" | "wall" | "all" | "preview"
 
 // ─── Per-part export plumbing (non-breaking; driven by -D on the CLI) ──
 // STL (3D, for FDM/CAM):   openscad -o front.stl -D 'part="front"' ...
