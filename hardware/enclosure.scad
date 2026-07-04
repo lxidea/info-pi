@@ -28,10 +28,11 @@ screen_t = 4;
 // How much of the screen edge the front bezel covers (must hide LCD bezel)
 bezel_inset = 2;   // mm inward from screen edge (assumed until AA is known)
 
-// Screen retention snap-clips on the front frame's two LONG edges: the LCD
-// loads from behind, its back edge cams past the clips' lead-in ramps, and
-// the clips' retaining faces trap it against the bezel ledge (no adhesive
-// needed). Overhang is small so the glass presses in with a slight flex.
+// Screen mounting: DEFAULT is ADHESIVE — the LCD glass bonds to the bezel
+// ledge (the ring behind the opening) with foam/VHB tape; no clips printed.
+// Set enable_screen_clips=true to instead print snap-clips on the two long
+// edges that trap the panel mechanically (needs a fit test on clip overhang).
+enable_screen_clips = false;
 screen_clip_n    = 3;     // clips per long edge
 screen_clip_w    = 8;     // clip width along the edge
 screen_clip_ov   = 1.0;   // overhang over the glass back edge
@@ -566,10 +567,10 @@ module front_frame() {
             }
         }
     }
-    // Corner join bosses + screen retention clips — added OUTSIDE the
+    // Corner join bosses (+ optional screen clips) — added OUTSIDE the
     // difference so the cavity cut above doesn't remove them.
     join_bosses();
-    screen_clips();
+    if (enable_screen_clips) screen_clips();
 }
 
 // ─── Back cover ───────────────────────────────────────────
