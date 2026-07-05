@@ -143,7 +143,10 @@ side_wall = 2;      // side wall thickness
 // parameter block lives lower down and reuses these.
 enable_fan = true;        // master switch for the whole cooler
 fan_intake_gap = 1;       // gap from fan back face to back cover (intake)
-fan_t = 10;               // blower thickness (4010 = 10mm) — drives depth
+fan_t = 7;                // blower thickness (4007 ultra-slim = 7mm). At 7mm
+                          // the fan stack (1+7+1=9) equals the board stack, so
+                          // the enclosure stays 17mm deep — bigger footprint,
+                          // no extra depth. (4010=10 would deepen it to 20.)
 
 // Cavity depth behind the screen must fit the DEEPEST component — either the
 // board stack (PCB + front-facing parts) or the blower stack (intake gap +
@@ -322,15 +325,14 @@ fin_cx = 135;             // fin block centre x (clear of VESA posts 99/174)
 fin_w = 36;               // x extent (across the airflow) — matches wider blower
 fin_y0 = 45;              // fins start just above the taller (40mm) blower
 fin_len = 18;             // y extent (the airflow direction)
-fin_h = 9;                // z height — deeper enclosure (20mm) lets the fins
-                          // span the 10mm blower height: base top z≈4, fin
-                          // tip z≈13 (fan top), screen back z≈14 (~1mm gap)
+fin_h = 6.5;              // z height — 17mm enclosure: base top z≈4, fin tip
+                          // z≈10.5 (~fan top), screen back z≈11 (~0.5 gap)
 fin_t = 0.8;              // fin plate thickness
 n_fins = 18;              // denser plate-fin count (pitch = fin_w/n_fins = 2mm)
 
-// Blower (4010) — in the clear centre strip, below the fins, +y.
+// Blower (4007 ultra-slim) — in the clear centre strip, below the fins, +y.
 // (fan_t and fan_intake_gap are defined earlier — inner_depth needs them.)
-fan_w = 40;               // 40×40 body footprint (4010)
+fan_w = 40;               // 40×40 body footprint (4007)
 fan_cx = 135;             // centred under the fin stack (clear of VESA 99/174)
 fan_cy = 24;              // body y ≈ 4..44, tangential nozzle on top edge
 fan_nozzle_w = 20;        // tangential outlet width feeding the fins
