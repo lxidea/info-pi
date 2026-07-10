@@ -194,12 +194,12 @@ hp_base_t  = 1.5;                                    // heatsink base plate thic
 // P0 evaporator → P1 after y-jog → P2 z-drop point → P3 after back run →
 // P4 after climb → P5 into fin base.
 hp_nodes = [
-    [soc_gx,    soc_gy],       // P0  evaporator pad centre (on SoC die)
+    [soc_gx,    soc_gy - hp_evap_ext],  // P0  evaporator tip (extended −y along the pipe)
     [soc_gx,    hp_lane_y],    // P1  jog up to the clear lane
     [hp_x_drop, hp_lane_y],    // P2  drop to back plane here
     [hp_x_turn, hp_lane_y],    // P3  end of back-plane run
     [hp_x_turn, hp_y_into],    // P4  climb to fin level
-    [fin_cx + fin_w/2, hp_y_into],  // P5  through the heatsink to its far edge
+    [fin_cx,    hp_y_into],    // P5  into the heatsink groove
 ];
 function _seg(i) = norm(hp_nodes[i+1] - hp_nodes[i]);
 hp_dev = _seg(0)+_seg(1)+_seg(2)+_seg(3)+_seg(4) + (hp_z_front-hp_z_back);
@@ -233,7 +233,7 @@ module cooler_plan() {
     // heatsink block footprint + groove + fin lines
     hb_x = fin_cx - fin_w/2;
     rect_outline(hb_x, fin_y0, fin_w, fin_len);
-    rect_outline(hb_x, hp_y_into - hp_w/2, fin_w, hp_w);        // pipe groove (full width)
+    rect_outline(hb_x, hp_y_into - hp_w/2, fin_w/2, hp_w);      // pipe groove
     pitch = fin_w / n_fins;
     for (i = [0 : n_fins-1])
         vline(fin_y0 + 1, fin_y0 + fin_len - 1, hb_x + i*pitch + pitch/2);
@@ -242,7 +242,7 @@ module cooler_plan() {
     hdim(soc_gx, hp_x_drop, hp_lane_y, hp_lane_y - 8, str(hp_x_drop - soc_gx)); // front run 23
     hdim(hp_x_drop, hp_x_turn, hp_lane_y, hp_lane_y - 16, str(hp_x_turn - hp_x_drop)); // back run 65
     vdim(hp_lane_y, hp_y_into, hp_x_turn, hp_x_turn + 26, str(hp_y_into - hp_lane_y));  // climb 8
-    hdim(hp_x_turn, fin_cx + fin_w/2, hp_y_into, hp_y_into + 22, str(fin_cx + fin_w/2 - hp_x_turn)); // into/through fins
+    hdim(hp_x_turn, fin_cx, hp_y_into, hp_y_into + 22, str(fin_cx - hp_x_turn));        // into fin 20
     hdim(hb_x, hb_x + fin_w, fin_y0 + fin_len, fin_y0 + fin_len + 15, str("heatsink ", fin_w));
     vdim(fin_y0, fin_y0 + fin_len, hb_x + fin_w, hb_x + fin_w + 10, str(fin_len));
     // bend + feature callouts

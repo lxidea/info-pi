@@ -317,6 +317,9 @@ enable_sd_slot = true;
 // Flattened heat pipe (off-the-shelf, bent to shape)
 hp_w = 6;                 // pipe width  (flattened from Ø6 round)
 hp_t = 3;                 // pipe thickness — fits the cavity flat
+hp_evap_ext = 6;          // extra evaporator length past the SoC (−y): the
+                          // flattened tip runs a bit further along the pipe
+                          // axis for a longer contact tail on the SoC/plate
 hp_lane_y = 36;           // horizontal-run y: clear cavity-CENTRE lane
                           // (between VESA rows AND between HDMI/OTG ports)
 
@@ -1163,9 +1166,10 @@ module heat_pipe_model() {
     color([0.80, 0.52, 0.30]) {
         // vertical jog: the SoC sits in the HDMI band (y≈28), so first climb
         // to the connector-free crossing lane (y≈36) — done at x≈27, well
-        // LEFT of the connectors (x40-48), so it touches nothing
-        translate([soc_gx - hp_w/2, soc_gy - hp_w/2, z_front])
-            cube([hp_w, hp_lane_y - soc_gy + hp_w, hp_t]);
+        // LEFT of the connectors (x40-48), so it touches nothing. The tip is
+        // extended hp_evap_ext further in −y for a longer evaporator tail.
+        translate([soc_gx - hp_w/2, soc_gy - hp_w/2 - hp_evap_ext, z_front])
+            cube([hp_w, hp_lane_y - soc_gy + hp_w + hp_evap_ext, hp_t]);
         // front-face run along the lane: out past the Pi, threading the y≈36
         // gap between the HDMI and OTG connectors
         translate([soc_gx - hp_w/2, hp_lane_y - hp_w/2, z_front])
@@ -1181,11 +1185,9 @@ module heat_pipe_model() {
         // climb up to fin level (left of the blower)
         translate([x_turn - hp_w/2, hp_lane_y - hp_w/2, z_back])
             cube([hp_w, y_into - hp_lane_y + hp_w/2, hp_t]);
-        // turn right and run through the ENTIRE condenser base, flush with
-        // its far edge (fin_cx + fin_w/2), so the pipe spreads heat across the
-        // full fin block instead of stopping at the centre.
+        // turn right into the condenser fin base
         translate([x_turn - hp_w/2, y_into - hp_w/2, z_back])
-            cube([fin_cx + fin_w/2 - x_turn + hp_w/2, hp_w, hp_t]);
+            cube([fin_cx - x_turn + hp_w/2, hp_w, hp_t]);
     }
     if (is_undef(NO_LABELS))
     color("SaddleBrown")
@@ -1233,10 +1235,9 @@ module fin_stack_model() {
         difference() {
             translate([fin_cx - fin_w/2, fin_y0, z0])
                 cube([fin_w, fin_len, base_t]);
-            // groove for the epoxied heat pipe — runs the FULL base width so
-            // the pipe seats across the whole heatsink (flush with both edges)
+            // groove for the epoxied heat pipe (entered from the left at y_into)
             translate([fin_cx - fin_w/2 - 0.1, fin_y0 + 3 - hp_w/2, z0 - 0.1])
-                cube([fin_w + 0.2, hp_w, hp_t]);
+                cube([fin_w/2 + 0.1, hp_w, hp_t]);
         }
     // extruded plate fins running along the airflow (y), spaced across x
     pitch = fin_w / n_fins;
