@@ -1181,9 +1181,11 @@ module heat_pipe_model() {
         // climb up to fin level (left of the blower)
         translate([x_turn - hp_w/2, hp_lane_y - hp_w/2, z_back])
             cube([hp_w, y_into - hp_lane_y + hp_w/2, hp_t]);
-        // turn right into the condenser fin base
+        // turn right and run through the ENTIRE condenser base, flush with
+        // its far edge (fin_cx + fin_w/2), so the pipe spreads heat across the
+        // full fin block instead of stopping at the centre.
         translate([x_turn - hp_w/2, y_into - hp_w/2, z_back])
-            cube([fin_cx - x_turn + hp_w/2, hp_w, hp_t]);
+            cube([fin_cx + fin_w/2 - x_turn + hp_w/2, hp_w, hp_t]);
     }
     if (is_undef(NO_LABELS))
     color("SaddleBrown")
@@ -1231,9 +1233,10 @@ module fin_stack_model() {
         difference() {
             translate([fin_cx - fin_w/2, fin_y0, z0])
                 cube([fin_w, fin_len, base_t]);
-            // groove for the epoxied heat pipe (entered from the left at y_into)
+            // groove for the epoxied heat pipe — runs the FULL base width so
+            // the pipe seats across the whole heatsink (flush with both edges)
             translate([fin_cx - fin_w/2 - 0.1, fin_y0 + 3 - hp_w/2, z0 - 0.1])
-                cube([fin_w/2 + 0.1, hp_w, hp_t]);
+                cube([fin_w + 0.2, hp_w, hp_t]);
         }
     // extruded plate fins running along the airflow (y), spaced across x
     pitch = fin_w / n_fins;
