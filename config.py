@@ -9,9 +9,19 @@ WEATHER_LON = 114.30
 # https://dev.qweather.com/ , create a project, and paste the API key +
 # your account's API host below. Leave QWEATHER_KEY empty to fall back to
 # Open-Meteo (no key needed).
-QWEATHER_KEY = ""                       # e.g. "abcdef0123456789..."
 QWEATHER_HOST = "devapi.qweather.com"   # free/dev host; paid = api.qweather.com,
                                         # or your account's custom xxxx.qweatherapi.com
+
+# Auth — use EITHER the legacy API key OR JWT (new QWeather accounts use JWT).
+# Legacy API key (query param):
+QWEATHER_KEY = ""                       # e.g. "abcdef0123456789..."
+# JWT (Ed25519) — from the QWeather console: create a credential, upload an
+# Ed25519 public key, and note the Project ID (sub) + Credential ID (kid).
+# QWEATHER_JWT_KEY is the Ed25519 PRIVATE key: paste the PEM text, or give a
+# path to the .pem file. Signed in pure Python (no crypto deps needed).
+QWEATHER_JWT_SUB = ""                   # project ID  (sub)
+QWEATHER_JWT_KID = ""                   # credential ID (kid)
+QWEATHER_JWT_KEY = ""                   # Ed25519 private key: PEM text or file path
 
 # Refresh intervals (seconds)
 WEATHER_INTERVAL = 900      # 15 minutes

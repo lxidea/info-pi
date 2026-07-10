@@ -1,9 +1,46 @@
-"""Weather collector using Open-Meteo API + moon phase + milky way."""
+"""Weather collector: QWeather (和风) or Open-Meteo + moon phase + milky way."""
 
+import os
+import json
+import time
+import base64
 import math
 import datetime
 import requests
 import config
+
+
+def _b64url(data):
+    return base64.urlsafe_b64encode(data).rstrip(b"=")
+
+
+def _ed25519_seed(pem_or_path):
+    """Extract the 32-byte Ed25519 seed from a PKCS8 PEM (text or file path)."""
+    txt = pem_or_path
+    if "BEGIN" not in txt and os.path.exists(txt):
+        with open(txt) as f:
+            txt = f.read()
+    body = "".join(l.strip() for l in txt.splitlines() if "-----" not in l)
+    return base64.b64decode(body)[-32:]      # PKCS8 Ed25519: seed = last 32 bytes
+
+
+def _qweather_jwt():
+    """Build a signed EdDSA JWT for QWeather (or None if JWT isn't configured)."""
+    sub = getattr(config, "QWEATHER_JWT_SUB", "")
+    kid = getattr(config, "QWEATHER_JWT_KID", "")
+    keyref = getattr(config, "QWEATHER_JWT_KEY", "")
+    if not (sub and kid and keyref):
+        return None
+    from collectors import _ed25519
+    seed = _ed25519_seed(keyref)
+    now = int(time.time())
+    header = {"alg": "EdDSA", "kid": kid}
+    payload = {"sub": sub, "iat": now - 30, "exp": now + 900}
+    signing_input = (_b64url(json.dumps(header, separators=(",", ":")).encode())
+                     + b"." +
+                     _b64url(json.dumps(payload, separators=(",", ":")).encode()))
+    sig = _ed25519.sign(signing_input, seed)
+    return (signing_input + b"." + _b64url(sig)).decode()
 
 # WMO weather code to Chinese description
 WMO_CODES = {
@@ -236,8 +273,8 @@ def _world_cities():
 
 
 def collect():
-    """Dispatch to QWeather (if a key is configured) else Open-Meteo."""
-    if getattr(config, "QWEATHER_KEY", ""):
+    """Dispatch to QWeather (if a key OR JWT is configured) else Open-Meteo."""
+    if getattr(config, "QWEATHER_KEY", "") or getattr(config, "QWEATHER_JWT_KEY", ""):
         return _collect_qweather()
     return _collect_openmeteo()
 
@@ -385,9 +422,15 @@ def _collect_qweather():
     loc = "{:.2f},{:.2f}".format(lon, lat)      # QWeather order is lon,lat
     base = "https://{}/v7".format(host)
 
+    # Auth: prefer JWT (Bearer) if configured, else legacy key query param.
+    jwt = _qweather_jwt()
+    headers = {"Authorization": "Bearer " + jwt} if jwt else {}
+    common = {} if jwt else {"key": key}
+
     def _get(path):
+        params = dict(common, location=loc)
         r = requests.get("{}/{}".format(base, path),
-                         params={"location": loc, "key": key}, timeout=15)
+                         params=params, headers=headers, timeout=15)
         r.raise_for_status()
         j = r.json()
         if str(j.get("code")) != "200":
