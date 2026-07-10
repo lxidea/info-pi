@@ -328,8 +328,9 @@ fin_cx = 135;             // fin block centre x (clear of VESA posts 99/174)
 fin_w = 36;               // x extent (across the airflow) — matches wider blower
 fin_y0 = 45;              // fins start just above the taller (40mm) blower
 fin_len = 18;             // y extent (the airflow direction)
-fin_h = 6.5;              // z height — 17mm enclosure: base top z≈4, fin tip
-                          // z≈10.5 (~fan top), screen back z≈11 (~0.5 gap)
+fin_h = 4.5;              // z height — the thicker base (3.5, to contain the
+                          // pipe) uses more depth, so fins fit z≈6..10.5
+                          // (base top z6, screen back z≈11, ~0.5 gap)
 fin_t = 0.8;              // fin plate thickness
 n_fins = 18;              // denser plate-fin count (pitch = fin_w/n_fins = 2mm)
 
@@ -1231,7 +1232,8 @@ module evaporator_block() {
 // between the fins into the top-wall vents. No custom fin fabrication.
 module fin_stack_model() {
     z0 = back_wall + 0.5;
-    base_t = 1.5;
+    base_t = hp_t + 0.5;      // base must CONTAIN the pipe groove (hp_t deep)
+                             // + 0.5mm above, so the pipe never reaches the fins
     // base plate with a pipe groove (the off-the-shelf heatsink's base)
     color([0.75, 0.75, 0.78])
         difference() {

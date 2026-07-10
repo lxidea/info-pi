@@ -188,7 +188,7 @@ hp_z_front = back_wall + board_back_gap + 1.4 + 1.5; // SoC-die press plane ≈ 
 hp_x_drop  = side_wall + 10 + pi_short + 8;          // z-drop x ≈ 50 (clear of Pi)
 hp_x_turn  = fan_cx - fan_w/2 - 5;                   // climb x ≈ 115 (left of blower)
 hp_y_into  = fin_y0 + 3;                             // enters fin base ≈ 44
-hp_base_t  = 1.5;                                    // heatsink base plate thickness
+hp_base_t  = hp_t + 0.5;                             // heatsink base (contains the pipe groove)
 
 // Pipe centreline nodes in the enclosure XY plane (viewed from the back).
 // P0 evaporator → P1 after y-jog → P2 z-drop point → P3 after back run →
