@@ -22,6 +22,50 @@ WMO_CODES = {
     99: "\u5f3a\u96f7\u9635\u96e8",
 }
 
+# QWeather icon code → WMO weather code, so the frontend (which keys icons
+# off WMO codes) works unchanged. QWeather also returns a Chinese `text`
+# description directly, which we use for the label. See
+# https://dev.qweather.com/docs/resource/icons/
+QWEATHER_ICON_TO_WMO = {
+    100: 0, 150: 0,                       # 晴
+    101: 2, 151: 2, 102: 1, 152: 1,       # 多云 / 少云
+    103: 1, 153: 1,                       # 晴间多云
+    104: 3, 154: 3,                       # 阴
+    300: 80, 350: 80, 301: 81, 351: 81,   # 阵雨
+    302: 95, 303: 99, 304: 96,            # 雷阵雨 / 强雷阵雨 / 伴冰雹
+    305: 61, 309: 51, 314: 63,            # 小雨 / 毛毛雨 / 小到中雨
+    306: 63, 315: 65, 399: 63,            # 中雨 / 中到大雨 / 雨
+    307: 65, 308: 65, 310: 65, 311: 65,   # 大雨 / 极端 / 暴雨 / 大暴雨
+    312: 65, 316: 65, 317: 65, 318: 65,   # 特大暴雨 / 大到暴雨 ...
+    313: 66,                              # 冻雨
+    400: 71, 408: 73, 401: 73, 409: 75,   # 小雪 / 小到中 / 中雪 / 中到大
+    402: 75, 403: 75, 410: 75, 499: 73,   # 大雪 / 暴雪 / 大到暴雪 / 雪
+    404: 85, 406: 85, 407: 86,            # 雨夹雪 / 阵雨夹雪 / 阵雪
+    405: 71,                              # 雨雪天气
+    500: 45, 501: 45, 509: 45, 510: 45,   # 薄雾 / 雾 / 浓雾 / 强浓雾
+    514: 45, 515: 48,                     # 大雾 / 特强浓雾
+    502: 45, 511: 45, 512: 45, 513: 45,   # 霾 / 中度霾 / 重度霾 / 严重霾
+    503: 45, 504: 45, 507: 45, 508: 45,   # 扬沙 / 浮尘 / 沙尘暴 / 强沙尘暴
+    900: 0, 901: 3, 999: -1,              # 热 / 冷 / 未知
+}
+
+
+def _qw_wmo(icon):
+    try:
+        return QWEATHER_ICON_TO_WMO.get(int(icon), -1)
+    except (TypeError, ValueError):
+        return -1
+
+
+def _hhmm(s):
+    """QWeather time may be 'HH:MM' or ISO '...THH:MM+08:00' → 'HH:MM'."""
+    if not s:
+        return ""
+    if "T" in s:
+        s = s.split("T")[1]
+    return s[:5]
+
+
 # Wind degree to 16-point compass direction (Chinese)
 WIND_DIRS = [
     "\u5317", "\u5317\u5317\u4e1c", "\u4e1c\u5317", "\u4e1c\u5317\u4e1c",
@@ -165,7 +209,40 @@ def _aqi_level(aqi):
     return "\u4e25\u91cd\u6c61\u67d3"      # Severe pollution
 
 
+def _world_cities():
+    """World-city temps (Berkeley / New York / Paris) via keyless Open-Meteo.
+    Best-effort — used by both providers."""
+    city_weather = []
+    try:
+        city_url = (
+            "https://api.open-meteo.com/v1/forecast"
+            "?latitude=37.87,40.71,48.86"
+            "&longitude=-122.27,-74.01,2.35"
+            "&current=temperature_2m,weather_code&timezone=auto"
+        )
+        city_resp = requests.get(city_url, timeout=10)
+        city_resp.raise_for_status()
+        city_raw = city_resp.json()
+        if isinstance(city_raw, list):
+            for item in city_raw:
+                c = item.get("current", {})
+                city_weather.append({
+                    "temp_c": str(int(round(c.get("temperature_2m", 0)))),
+                    "weather_code": c.get("weather_code", -1),
+                })
+    except Exception:
+        pass
+    return city_weather
+
+
 def collect():
+    """Dispatch to QWeather (if a key is configured) else Open-Meteo."""
+    if getattr(config, "QWEATHER_KEY", ""):
+        return _collect_qweather()
+    return _collect_openmeteo()
+
+
+def _collect_openmeteo():
     lat = config.WEATHER_LAT
     lon = config.WEATHER_LON
     url = (
@@ -187,26 +264,7 @@ def collect():
         return None
 
     # World city temperatures (best-effort)
-    city_weather = []
-    try:
-        city_url = (
-            "https://api.open-meteo.com/v1/forecast"
-            "?latitude=37.87,40.71,48.86"
-            "&longitude=-122.27,-74.01,2.35"
-            "&current=temperature_2m,weather_code&timezone=auto"
-        )
-        city_resp = requests.get(city_url, timeout=10)
-        city_resp.raise_for_status()
-        city_raw = city_resp.json()
-        if isinstance(city_raw, list):
-            for item in city_raw:
-                c = item.get("current", {})
-                city_weather.append({
-                    "temp_c": str(int(round(c.get("temperature_2m", 0)))),
-                    "weather_code": c.get("weather_code", -1),
-                })
-    except Exception:
-        pass
+    city_weather = _world_cities()
 
     # Air quality (separate API, best-effort)
     aqi_data = {}
@@ -314,4 +372,117 @@ def collect():
         "astronomy": astronomy,
         "air_quality": aqi_data,
         "city_weather": city_weather,
+    }
+
+
+def _collect_qweather():
+    """China-native weather via QWeather (和风天气). Produces the same output
+    dict as the Open-Meteo path; icons map through QWeather→WMO codes."""
+    lat = config.WEATHER_LAT
+    lon = config.WEATHER_LON
+    host = getattr(config, "QWEATHER_HOST", "devapi.qweather.com")
+    key = config.QWEATHER_KEY
+    loc = "{:.2f},{:.2f}".format(lon, lat)      # QWeather order is lon,lat
+    base = "https://{}/v7".format(host)
+
+    def _get(path):
+        r = requests.get("{}/{}".format(base, path),
+                         params={"location": loc, "key": key}, timeout=15)
+        r.raise_for_status()
+        j = r.json()
+        if str(j.get("code")) != "200":
+            raise ValueError("QWeather code " + str(j.get("code")))
+        return j
+
+    # current + 3-day forecast are required
+    try:
+        now = _get("weather/now").get("now", {})
+        daily = _get("weather/3d").get("daily", [])
+    except Exception:
+        return None
+    if not daily:
+        return None
+    d0 = daily[0]
+
+    wcode = _qw_wmo(now.get("icon"))
+    cloud_cover = int(now.get("cloud") or 0)
+    wind_deg = int(float(now.get("wind360") or 0))
+    description = now.get("text") or WMO_CODES.get(wcode, "未知")
+
+    forecast = []
+    for d in daily:
+        wdeg = int(float(d.get("wind360Day") or 0))
+        forecast.append({
+            "date": d.get("fxDate", ""),
+            "max_c": str(int(round(float(d.get("tempMax", 0))))),
+            "min_c": str(int(round(float(d.get("tempMin", 0))))),
+            "desc": d.get("textDay", ""),
+            "weather_code": _qw_wmo(d.get("iconDay")),
+            "wind_speed_kmh": int(round(float(d.get("windSpeedDay") or 0))),
+            "wind_dir_deg": wdeg,
+            "wind_dir": _wind_direction(wdeg),
+        })
+
+    sunrise = _hhmm(d0.get("sunrise", ""))
+    sunset = _hhmm(d0.get("sunset", ""))
+    moonrise = _hhmm(d0.get("moonrise", ""))
+    moonset = _hhmm(d0.get("moonset", ""))
+
+    moon_cn, moon_en, moon_illum, phase_frac = _moon_phase()
+    if not (moonrise and moonset):          # QWeather blanks these some days
+        moonrise, moonset = _moon_rise_set(phase_frac, sunrise or "06:00", sunset or "18:00")
+
+    today = datetime.date.today()
+    mw_rating, mw_note = _milky_way(moon_illum, today.month, cloud_cover, wcode)
+
+    # hourly (best-effort) — next 12 hours
+    hourly = []
+    try:
+        for h in _get("weather/24h").get("hourly", [])[:12]:
+            hourly.append({
+                "hour": _hhmm(h.get("fxTime", ""))[:2],
+                "temp_c": round(float(h.get("temp", 0)), 1),
+                "weather_code": _qw_wmo(h.get("icon")),
+            })
+    except Exception:
+        pass
+
+    # air quality (best-effort)
+    aqi_data = {}
+    try:
+        a = _get("air/now").get("now", {})
+        us_aqi = int(float(a.get("aqi", 0)))
+        aqi_data = {
+            "aqi": us_aqi,
+            "level": a.get("category") or _aqi_level(us_aqi),
+            "pm25": str(a.get("pm2p5", "")),
+            "pm10": str(a.get("pm10", "")),
+        }
+    except Exception:
+        pass
+
+    astronomy = {
+        "sunrise": sunrise, "sunset": sunset,
+        "moonrise": moonrise, "moonset": moonset,
+        "moon_phase": moon_cn, "moon_phase_en": moon_en,
+        "moon_illumination": str(moon_illum),
+        "milky_way_rating": mw_rating, "milky_way_note": mw_note,
+        "latitude": lat, "longitude": lon,
+    }
+
+    return {
+        "temp_c": str(int(round(float(now.get("temp", 0))))),
+        "feels_like_c": str(int(round(float(now.get("feelsLike", 0))))),
+        "description": description,
+        "weather_code": wcode,
+        "humidity": str(now.get("humidity", "")),
+        "wind_speed_kmh": str(int(round(float(now.get("windSpeed", 0))))),
+        "wind_dir": _wind_direction(wind_deg),
+        "wind_dir_deg": wind_deg,
+        "cloud_cover": cloud_cover,
+        "forecast": forecast,
+        "hourly": hourly,
+        "astronomy": astronomy,
+        "air_quality": aqi_data,
+        "city_weather": _world_cities(),
     }

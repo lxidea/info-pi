@@ -1,8 +1,17 @@
 """Configuration for Info-Pi dashboard."""
 
-# Location for weather (latitude/longitude for Open-Meteo)
+# Location for weather (latitude/longitude)
 WEATHER_LAT = 30.59
 WEATHER_LON = 114.30
+
+# Weather provider. QWeather (和风天气) is far more accurate for Chinese
+# cities than the keyless Open-Meteo global models. Register a free key at
+# https://dev.qweather.com/ , create a project, and paste the API key +
+# your account's API host below. Leave QWEATHER_KEY empty to fall back to
+# Open-Meteo (no key needed).
+QWEATHER_KEY = ""                       # e.g. "abcdef0123456789..."
+QWEATHER_HOST = "devapi.qweather.com"   # free/dev host; paid = api.qweather.com,
+                                        # or your account's custom xxxx.qweatherapi.com
 
 # Refresh intervals (seconds)
 WEATHER_INTERVAL = 900      # 15 minutes
