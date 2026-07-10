@@ -43,16 +43,23 @@ solid OpenSCAD_Model
   endfacet
   facet normal 0 0 -1
     outer loop
-      vertex 30 19 6.9
-      vertex 24 19 6.9
-      vertex 30 21 6.9
+      vertex 34 21 6.9
+      vertex 24 35 6.9
+      vertex 34 33 6.9
     endloop
   endfacet
   facet normal 0 0 -1
     outer loop
+      vertex 20 21 6.9
+      vertex 24 35 6.9
       vertex 34 21 6.9
-      vertex 30 21 6.9
-      vertex 34 33 6.9
+    endloop
+  endfacet
+  facet normal -0 0 -1
+    outer loop
+      vertex 24 35 6.9
+      vertex 20 21 6.9
+      vertex 20 35 6.9
     endloop
   endfacet
   facet normal 0 0 -1
@@ -64,27 +71,6 @@ solid OpenSCAD_Model
   endfacet
   facet normal 0 0 -1
     outer loop
-      vertex 24 21 6.9
-      vertex 30 21 6.9
-      vertex 24 19 6.9
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 24 35 6.9
-      vertex 30 21 6.9
-      vertex 24 21 6.9
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 30 21 6.9
-      vertex 24 35 6.9
-      vertex 34 33 6.9
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
       vertex 24 39 6.9
       vertex 34 33 6.9
       vertex 24 35 6.9
@@ -95,20 +81,6 @@ solid OpenSCAD_Model
       vertex 34 33 6.9
       vertex 24 39 6.9
       vertex 47 39 6.9
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 20 21 6.9
-      vertex 24 35 6.9
-      vertex 24 21 6.9
-    endloop
-  endfacet
-  facet normal -0 0 -1
-    outer loop
-      vertex 24 35 6.9
-      vertex 20 21 6.9
-      vertex 20 35 6.9
     endloop
   endfacet
   facet normal -1 0 0
@@ -155,58 +127,16 @@ solid OpenSCAD_Model
   endfacet
   facet normal 0 -1 0
     outer loop
-      vertex 20 21 10.9
-      vertex 24 21 9.9
-      vertex 34 21 10.9
-    endloop
-  endfacet
-  facet normal 0 -1 0
-    outer loop
       vertex 20 21 6.9
-      vertex 24 21 9.9
+      vertex 34 21 10.9
       vertex 20 21 10.9
     endloop
   endfacet
   facet normal 0 -1 -0
     outer loop
-      vertex 24 21 9.9
+      vertex 34 21 10.9
       vertex 20 21 6.9
-      vertex 24 21 6.9
-    endloop
-  endfacet
-  facet normal 0 -1 0
-    outer loop
-      vertex 30 21 9.9
-      vertex 34 21 10.9
-      vertex 24 21 9.9
-    endloop
-  endfacet
-  facet normal 0 -1 0
-    outer loop
       vertex 34 21 6.9
-      vertex 30 21 9.9
-      vertex 30 21 6.9
-    endloop
-  endfacet
-  facet normal 0 -1 0
-    outer loop
-      vertex 30 21 9.9
-      vertex 34 21 6.9
-      vertex 34 21 10.9
-    endloop
-  endfacet
-  facet normal 1 -0 0
-    outer loop
-      vertex 30 19 9.9
-      vertex 30 21 6.9
-      vertex 30 21 9.9
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 30 21 6.9
-      vertex 30 19 9.9
-      vertex 30 19 6.9
     endloop
   endfacet
   facet normal 0 0 1
@@ -237,20 +167,6 @@ solid OpenSCAD_Model
       vertex 34 33 9.9
     endloop
   endfacet
-  facet normal -0 0 1
-    outer loop
-      vertex 24 21 9.9
-      vertex 30 19 9.9
-      vertex 30 21 9.9
-    endloop
-  endfacet
-  facet normal 0 0 1
-    outer loop
-      vertex 30 19 9.9
-      vertex 24 21 9.9
-      vertex 24 19 9.9
-    endloop
-  endfacet
   facet normal -1 0 0
     outer loop
       vertex 24 35 6.9
@@ -263,20 +179,6 @@ solid OpenSCAD_Model
       vertex 24 39 9.9
       vertex 24 35 6.9
       vertex 24 35 9.9
-    endloop
-  endfacet
-  facet normal -1 0 0
-    outer loop
-      vertex 24 19 6.9
-      vertex 24 21 9.9
-      vertex 24 21 6.9
-    endloop
-  endfacet
-  facet normal -1 -0 0
-    outer loop
-      vertex 24 21 9.9
-      vertex 24 19 6.9
-      vertex 24 19 9.9
     endloop
   endfacet
   facet normal 0 1 0
@@ -319,20 +221,6 @@ solid OpenSCAD_Model
       vertex 24 39 9.9
       vertex 47 39 6.9
       vertex 24 39 6.9
-    endloop
-  endfacet
-  facet normal 0 -1 0
-    outer loop
-      vertex 24 19 6.9
-      vertex 30 19 9.9
-      vertex 24 19 9.9
-    endloop
-  endfacet
-  facet normal 0 -1 -0
-    outer loop
-      vertex 30 19 9.9
-      vertex 24 19 6.9
-      vertex 30 19 6.9
     endloop
   endfacet
   facet normal 0 -1 0

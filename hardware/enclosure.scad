@@ -317,9 +317,9 @@ enable_sd_slot = true;
 // Flattened heat pipe (off-the-shelf, bent to shape)
 hp_w = 6;                 // pipe width  (flattened from Ø6 round)
 hp_t = 3;                 // pipe thickness — fits the cavity flat
-hp_evap_ext = 6;          // extra evaporator length past the SoC (−y): the
-                          // flattened tip runs a bit further along the pipe
-                          // axis for a longer contact tail on the SoC/plate
+hp_evap_ext = 4;          // extra evaporator length in −y: lands the tip at
+                          // the cold-plate bottom edge (a longer contact tail
+                          // that stays under the plate — not protruding)
 hp_lane_y = 36;           // horizontal-run y: clear cavity-CENTRE lane
                           // (between VESA rows AND between HDMI/OTG ports)
 
