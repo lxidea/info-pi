@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .superpowers/
 .claude/
+
+# Secrets — QWeather Ed25519 keys (never commit the private key)
+*.pem
