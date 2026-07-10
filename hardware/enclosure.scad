@@ -1252,7 +1252,19 @@ module fin_stack_model() {
 // ─── Render selector ──────────────────────────────────────
 // Set `part` to render one of the parts at a time
 
-part = "preview";  // "front" | "back" | "wall" | "all" | "preview"
+// Mock LCD panel for the assembled "with screen" view (NOT a printed part):
+// dark glass seated in the pocket + a lit active area filling the opening.
+module screen_model() {
+    sx = (total_w - screen_w) / 2;
+    sy = (total_h - screen_h) / 2;
+    color([0.06, 0.06, 0.08])                          // glass body
+        translate([sx, sy, front_wall]) cube([screen_w, screen_h, screen_t]);
+    color([0.12, 0.42, 0.85])                          // lit active area (through opening)
+        translate([sx + bezel_inset, sy + bezel_inset, 0])
+            cube([screen_w - 2*bezel_inset, screen_h - 2*bezel_inset, front_wall + screen_t]);
+}
+
+part = "all";  // "front"|"back"|"wall"|"all"|"preview"|"assembly"|"cooler"|"pipe"|"heatsink"|"evaporator"
 
 // ─── Per-part export plumbing (non-breaking; driven by -D on the CLI) ──
 // STL (3D, for FDM/CAM):   openscad -o front.stl -D 'part="front"' ...
@@ -1300,6 +1312,15 @@ else if (part == "all") {
         color("SlateGray") back_cover();
     translate([total_w + 30, 0, 0])
         color("LightGray") wall_mount();
+}
+else if (part == "assembly") {
+    // Finished look WITH the display: front frame + LCD panel showing
+    // through the opening + back cover closed behind. View from the front
+    // (−z) to see the screen; rotate to inspect the closed box.
+    color([0.28, 0.28, 0.30]) front_frame();
+    screen_model();
+    translate([0, total_h, front_wall + inner_depth + 2 + back_wall])
+        rotate([180, 0, 0]) color([0.32, 0.32, 0.35]) back_cover();
 }
 else if (part == "preview") {
     // Layout verification view: back cover with posts + board models
