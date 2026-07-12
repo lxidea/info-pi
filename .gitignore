@@ -4,5 +4,6 @@ __pycache__/
 .superpowers/
 .claude/
 
-# Secrets — QWeather Ed25519 keys (never commit the private key)
+# Secrets — QWeather Ed25519 keys + local credential overrides (never commit)
 *.pem
+secrets_local.py
