@@ -15,10 +15,17 @@ def _b64url(data):
 
 
 def _ed25519_seed(pem_or_path):
-    """Extract the 32-byte Ed25519 seed from a PKCS8 PEM (text or file path)."""
+    """Extract the 32-byte Ed25519 seed from a PKCS8 PEM (text or file path).
+    A relative file path resolves relative to config.py, so it works no matter
+    the service's working directory."""
     txt = pem_or_path
-    if "BEGIN" not in txt and os.path.exists(txt):
-        with open(txt) as f:
+    if "BEGIN" not in txt:                          # it's a file path
+        path = txt
+        if not os.path.isabs(path) and not os.path.exists(path):
+            root = os.path.dirname(os.path.abspath(config.__file__))
+            if os.path.exists(os.path.join(root, path)):
+                path = os.path.join(root, path)
+        with open(path) as f:
             txt = f.read()
     body = "".join(l.strip() for l in txt.splitlines() if "-----" not in l)
     return base64.b64decode(body)[-32:]      # PKCS8 Ed25519: seed = last 32 bytes
