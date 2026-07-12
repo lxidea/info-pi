@@ -375,6 +375,7 @@ body {
     display: flex; align-items: center;
     gap: 8px;
     min-width: 0;
+    overflow: hidden;              /* never let content spill past the card */
 }
 
 .fc-card .fc-i {
@@ -411,15 +412,23 @@ body {
 
 .fc-card .fc-wind {
     color: var(--c-dim);
-    font-size: 13px;
+    font-size: 12px;
     display: flex;
     align-items: center;
-    gap: 5px;
-    margin-top: 3px;
+    gap: 4px;
+    margin-top: 2px;
+    min-width: 0;
+}
+
+.fc-card .fc-wind > span:last-child {   /* dir + speed — keep on one line */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .fc-card .fc-wind-arrow {
-    width: 14px; height: 14px;
+    width: 13px; height: 13px;
     flex-shrink: 0;
 }
 

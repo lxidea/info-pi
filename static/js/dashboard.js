@@ -318,9 +318,11 @@ function updateWeather(w) {
         var windHtml = "";
         if (day.wind_speed_kmh !== undefined) {
             var arrowSvg = (day.wind_dir_deg !== undefined) ? svgWindArrow(day.wind_dir_deg, 12) : "";
+            // arrow already shows direction, so only the speed text (keeps it
+            // on one line inside the narrow card)
             windHtml = '<div class="fc-wind">' +
                 '<span class="fc-wind-arrow">' + arrowSvg + '</span>' +
-                '<span>' + (day.wind_dir||'') + ' ' + day.wind_speed_kmh + 'km/h</span></div>';
+                '<span>' + day.wind_speed_kmh + ' km/h</span></div>';
         }
         e.innerHTML = '<div class="fc-i">'+svgWeatherIcon(day.weather_code, 44)+'</div>' +
             '<div class="fc-info">' +
