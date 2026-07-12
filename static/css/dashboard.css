@@ -291,6 +291,46 @@ body {
     padding: 4px 4px 2px;
 }
 
+/* Minute-level rain nowcast strip */
+.wx-rain {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--f-body);
+    font-size: 14px;
+    color: var(--c-dim);
+    padding: 3px 8px;
+    border-radius: var(--r-inner);
+    background: rgba(0, 0, 0, 0.18);
+}
+.wx-rain.rain-on {
+    color: var(--c-time);
+    background: rgba(91, 160, 208, 0.14);
+}
+.wx-rain .rain-ico { font-family: var(--f-sym); font-size: 15px; flex: 0 0 auto; }
+.wx-rain .rain-txt {
+    flex: 0 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.wx-rain .rain-bars {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 1px;
+    height: 15px;
+    margin-left: auto;
+    opacity: 0.5;
+}
+.wx-rain.rain-on .rain-bars { opacity: 0.85; }
+.wx-rain .rain-bars i {
+    flex: 1 1 0;
+    background: currentColor;
+    border-radius: 1px;
+    min-height: 1px;
+}
+
 .wx-chart svg { width: 100%; height: 100%; }
 
 .wx-chart .chart-area { fill: url(#tempGrad); opacity: 0.3; }

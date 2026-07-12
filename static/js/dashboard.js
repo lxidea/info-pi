@@ -289,6 +289,26 @@ function updateWeather(w) {
         m.appendChild(e);
     });
 
+    // Minute-level rain nowcast (QWeather only) — "X分钟后开始下雨" + sparkline
+    var rainEl = document.getElementById("w-rain");
+    var rs = w.rain_summary || "";
+    if (rs) {
+        var mm = w.rain_minutely || [];
+        var wet = /[雨雪]/.test(rs) && !/无[雨雪降]/.test(rs);
+        var maxp = mm.reduce(function(a, x){ return Math.max(a, x.precip); }, 0.08);
+        var bars = mm.map(function(x){
+            var h = Math.max(6, Math.round(x.precip / maxp * 100));
+            return '<i style="height:' + h + '%"></i>';
+        }).join("");
+        rainEl.className = "wx-rain" + (wet ? " rain-on" : "");
+        rainEl.innerHTML = '<span class="rain-ico">☔</span>' +
+                           '<span class="rain-txt">' + rs + '</span>' +
+                           (mm.length ? '<span class="rain-bars">' + bars + '</span>' : '');
+        rainEl.style.display = "";
+    } else {
+        rainEl.style.display = "none";
+    }
+
     // Forecast — horizontal cards: icon left, info right
     var fc = document.getElementById("w-forecast");
     fc.innerHTML = "";

@@ -415,6 +415,8 @@ def _collect_openmeteo():
         "hourly": hourly,
         "astronomy": astronomy,
         "air_quality": aqi_data,
+        "rain_summary": "",          # minute-rain nowcast is QWeather-only
+        "rain_minutely": [],
         "city_weather": city_weather,
     }
 
@@ -511,6 +513,20 @@ def _collect_qweather():
     except Exception:
         pass
 
+    # minute-level rain nowcast (best-effort, China only) — "X分钟后开始下小雨"
+    rain_summary = ""
+    rain_minutely = []
+    try:
+        mj = _get("minutely/5m")
+        rain_summary = mj.get("summary", "")
+        for m in mj.get("minutely", []):
+            rain_minutely.append({
+                "t": _hhmm(m.get("fxTime", "")),
+                "precip": float(m.get("precip", 0) or 0),
+            })
+    except Exception:
+        pass
+
     astronomy = {
         "sunrise": sunrise, "sunset": sunset,
         "moonrise": moonrise, "moonset": moonset,
@@ -534,5 +550,7 @@ def _collect_qweather():
         "hourly": hourly,
         "astronomy": astronomy,
         "air_quality": aqi_data,
+        "rain_summary": rain_summary,
+        "rain_minutely": rain_minutely,
         "city_weather": _world_cities(),
     }
