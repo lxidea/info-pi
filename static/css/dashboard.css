@@ -465,12 +465,14 @@ body {
 .m-pill .mv {
     color: var(--c-text); font-weight: 700;
     font-variant-numeric: tabular-nums;
-    font-size: 17px;
+    font-size: 16px;
     line-height: 1.1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.m-pill .mv svg { vertical-align: -1px; margin-right: 3px; }
 
 .m-pill.aqi-good .mv { color: var(--c-green); }
 .m-pill.aqi-moderate .mv { color: var(--c-time); }

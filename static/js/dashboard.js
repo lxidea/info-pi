@@ -267,10 +267,13 @@ function updateWeather(w) {
 
     // Metrics — 4 compact pills in 2x2 grid
     var m = document.getElementById("w-metrics");
+    // wind: arrow shows direction, so the value stays short enough to fit the
+    // narrow pill (the 风 dir text used to overflow → ellipsis)
+    var windArrow = (w.wind_dir_deg !== undefined) ? svgWindArrow(w.wind_dir_deg, 13) : "";
     var pills = [
         {l:"湿度", v:w.humidity+"%"},
         {l:"体感", v:w.feels_like_c+"°"},
-        {l:"风", v:w.wind_speed_kmh+"km/h "+w.wind_dir}
+        {l:"风", v: windArrow + w.wind_speed_kmh + " km/h"}
     ];
     var aq = w.air_quality;
     if (aq && aq.aqi) {
