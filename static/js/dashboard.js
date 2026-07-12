@@ -324,11 +324,13 @@ function updateWeather(w) {
                 '<span class="fc-wind-arrow">' + arrowSvg + '</span>' +
                 '<span>' + day.wind_speed_kmh + ' km/h</span></div>';
         }
-        e.innerHTML = '<div class="fc-i">'+svgWeatherIcon(day.weather_code, 44)+'</div>' +
-            '<div class="fc-info">' +
-                '<div class="fc-d">'+day.date.slice(5)+' · '+day.desc+'</div>' +
-                '<div class="fc-t">'+day.max_c+'° / '+day.min_c+'°</div>' +
-                windHtml +
+        e.innerHTML = '<div class="fc-d">'+day.date.slice(5)+' · '+day.desc+'</div>' +
+            '<div class="fc-body">' +
+                '<div class="fc-i">'+svgWeatherIcon(day.weather_code, 40)+'</div>' +
+                '<div class="fc-info">' +
+                    '<div class="fc-t">'+day.max_c+'° / '+day.min_c+'°</div>' +
+                    windHtml +
+                '</div>' +
             '</div>';
         fc.appendChild(e);
     });
